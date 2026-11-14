@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#03050c">
+  <title>Orbe Clima</title>
+  <link rel="stylesheet" href="css/clima.css">
+  <link rel="stylesheet" href="css/uhd.css">
+</head>
+<body>
+  <div id="defs-host"></div>
+  <div id="globe" aria-label="Globo terráqueo con viento, lluvia y huracanes"></div>
+
+  <div id="splash">
+    <div class="splash-glow"></div>
+    <div class="splash-logo"><img src="img/icono.png" width="128" height="128" alt=""></div>
+    <h1>Orbe Clima</h1>
+    <p id="splash-msg">Cargando el clima del planeta…</p>
+    <div class="progress"><div id="splash-bar"></div></div>
+  </div>
+
+  <!-- HUD superior -->
+  <header class="hud">
+    <div class="hud-row">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <div class="brand-text"><b>ORBE CLIMA</b><small><span class="live">EN VIVO</span><span id="clock">--:--</span></small></div>
+      </div>
+      <button id="btn-search" class="icon-btn" aria-label="Buscar ciudad"></button>
+      <button id="btn-menu" class="icon-btn" aria-label="Ajustes y Premium"></button>
+    </div>
+
+    <!-- El tiempo ahora en tu ciudad -->
+    <button class="now-card" id="now-card" aria-label="Pronóstico de tu ciudad">
+      <span id="now-ico"></span>
+      <span class="now-temp" id="now-temp">--<sup>°</sup></span>
+      <span class="now-main">
+        <span class="eyebrow" id="now-place">Tu ciudad</span>
+        <b id="now-desc">Toca para elegir tu ciudad</b>
+        <small id="now-sub">Pronóstico, alertas y huracanes cerca</small>
+      </span>
+    </button>
+
+    <div class="chips" id="layers" role="tablist" aria-label="Capas del mapa"></div>
+  </header>
+
+  <!-- Escala de colores -->
+  <div class="scale" id="scale"></div>
+
+  <!-- Línea de tiempo del pronóstico -->
+  <div class="timeline" id="timeline">
+    <button class="play" id="play" aria-label="Reproducir el pronóstico"></button>
+    <div class="tl-main">
+      <div class="tl-top"><b id="tl-time">Ahora</b><small id="tl-src">Pronóstico 48 h</small></div>
+      <input class="tl-range" id="tl-range" type="range" min="0" max="15" step="0.05" value="0" aria-label="Hora del pronóstico">
+      <div class="tl-days" id="tl-days"></div>
+    </div>
+  </div>
+
+  <!-- Hoja de contenido -->
+  <section class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div><h2 id="sheet-title">—</h2><p id="sheet-sub"></p></div>
+      <button id="sheet-close" class="icon-btn small" aria-label="Cerrar"></button>
+    </div>
+    <div class="sheet-tabs" id="sheet-tabs"></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+
+  <!-- Barra de pestañas -->
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="mapa" aria-selected="true"><span class="ti" data-ico="mapa"></span><span>Mapa</span></button>
+    <button data-tab="clima"><span class="ti" data-ico="clima"></span><span>Mi clima</span></button>
+    <button data-tab="huracanes"><span class="ti" data-ico="huracan"></span><span>Huracanes</span></button>
+    <button data-tab="alertas"><span class="ti" data-ico="alertas"></span><span>Alertas</span></button>
+  </nav>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="lib/globe.gl.min.js"></script>
+  <script src="js/tierra-hd.js"></script>
+  <script src="js/iconos.js"></script>
+  <script src="js/clima.js"></script>
+</body>
+</html>

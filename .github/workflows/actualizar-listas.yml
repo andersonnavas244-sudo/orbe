@@ -1,0 +1,98 @@
+# Publica en GitHub Pages (solo datos, sin página web) los catálogos que descargan las apps:
+#   https://andersonnavas244-sudo.github.io/orbe/radio/stations.json   (lunes: Radio Browser)
+#   https://andersonnavas244-sudo.github.io/orbe/tv/stations.json      (lunes: prueba cada señal de TV)
+#   https://andersonnavas244-sudo.github.io/orbe/espacio/sats.json     (todos los días: órbitas de CelesTrak)
+#   https://andersonnavas244-sudo.github.io/orbe/clima/grid.json       (cada 6 horas: viento, lluvia, humedad y temperatura de NOAA GFS)
+#   (Orbe Podcasts: el catálogo del APK se renueva en el repositorio con node OrbePodcasts/tools/build-catalog.js;
+#    la app además descarga en vivo el top de cada país desde Apple Podcasts.)
+# Las apps los descargan solas (CatalogUpdater.CATALOG_URL en Radio/TV, MIRROR en espacio.js,
+# ClimaConfig.MIRROR_URL en Orbe Clima). Lo que no toca renovar se vuelve a publicar tal cual.
+# No necesita claves ni secretos: todas las fuentes son gratuitas y permiten uso comercial.
+#
+# Para activarla (una sola vez):
+#   1. Publica este repositorio en GitHub (GitHub Desktop → Publish repository, desmarcando "Keep this code private").
+#   2. En github.com, en el repositorio: Settings → Pages → Source: "GitHub Actions".
+#   3. Pestaña Actions → "Actualizar listas" → "Run workflow" (después corre sola todos los días).
+name: Actualizar listas
+
+on:
+  schedule:
+    - cron: '15 */6 * * *'   # cada 6 horas (06:15 UTC = 1:15 a. m. en Colombia renueva también lo diario)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  listas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: ¿Qué toca renovar? (radio y TV los lunes, satélites una vez al día, clima siempre)
+        id: dia
+        run: |
+          H=$(date -u +%H); D=$(date -u +%u); M="${{ github.event_name }}"
+          if { [ "$D" = "1" ] && [ "$H" = "06" ]; } || [ "$M" = "workflow_dispatch" ]; then echo "listas=si" >> "$GITHUB_OUTPUT"; else echo "listas=no" >> "$GITHUB_OUTPUT"; fi
+          if [ "$H" = "06" ] || [ "$M" = "workflow_dispatch" ]; then echo "sats=si" >> "$GITHUB_OUTPUT"; else echo "sats=no" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Emisoras de radio (Radio Browser)
+        if: steps.dia.outputs.listas == 'si'
+        run: node RadioOrbe/tools/build-catalog.js
+
+      - name: Canales de TV (iptv-org + Free-TV, probando cada señal)
+        if: steps.dia.outputs.listas == 'si'
+        run: node OrbeTV/tools/build-catalog.js RadioOrbe/app/src/main/assets/www/data/stations.json
+
+      - name: Órbitas de satélites (CelesTrak) para Orbe Espacio
+        if: steps.dia.outputs.sats == 'si'
+        run: node OrbeEspacio/tools/build-sats.js
+
+      - name: Mapa mundial del clima (NOAA GFS vía PacIOOS) para Orbe Clima
+        run: node OrbeClima/tools/build-grid.js public-grid.json
+
+      - name: Preparar archivos
+        run: |
+          mkdir -p public/radio public/tv public/espacio public/clima
+          BASE="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          if [ "${{ steps.dia.outputs.listas }}" = "si" ]; then
+            cp RadioOrbe/app/src/main/assets/www/data/stations.json public/radio/stations.json
+            cp OrbeTV/app/src/main/assets/www/data/stations.json public/tv/stations.json
+          else
+            # Se vuelven a publicar las listas de la semana (o las del repositorio si aún no hay)
+            for a in radio tv; do
+              curl -fsSL "$BASE/$a/stations.json" -o public/$a/stations.json || rm -f public/$a/stations.json
+            done
+            [ -s public/radio/stations.json ] || cp RadioOrbe/app/src/main/assets/www/data/stations.json public/radio/stations.json
+            [ -s public/tv/stations.json ] || cp OrbeTV/app/src/main/assets/www/data/stations.json public/tv/stations.json
+          fi
+          if [ "${{ steps.dia.outputs.sats }}" = "si" ]; then
+            cp OrbeEspacio/app/src/main/assets/www/data/sats.json public/espacio/sats.json
+          else
+            curl -fsSL "$BASE/espacio/sats.json" -o public/espacio/sats.json || cp OrbeEspacio/app/src/main/assets/www/data/sats.json public/espacio/sats.json
+          fi
+          cp public-grid.json public/clima/grid.json
+          node -e "for (const a of ['radio','tv']) { const d=require('./public/'+a+'/stations.json'); require('fs').writeFileSync('public/'+a+'/version.json', JSON.stringify({generated:d.generated, total:d.rows.length})) }"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

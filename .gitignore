@@ -1,0 +1,28 @@
+# Compilación de Android
+.gradle/
+build/
+*/app/build/
+*/build/
+local.properties
+.idea/
+*.iml
+# APK y AAB (se generan; no se suben al repositorio)
+dist/
+*.apk
+*.aab
+# Claves de firma: NUNCA subirlas
+*.jks
+*.keystore
+keystore.properties
+# Varios
+node_modules/
+__pycache__/
+OrbeEspacio/tools/cache/
+OrbeClima/tools/cache/
+OrbeClima/app/src/main/assets/www/data/grid-prueba.json
+# Texturas originales (se descargan de solarsystemscope.com; las convertidas sí se guardan)
+tools-diseno/texturas/8k_earth_*.tif
+tools-diseno/texturas/8k_earth_clouds.jpg
+tools-diseno/texturas/8k_stars_milky_way.jpg
+tools-diseno/ciudades/cities15000.*
+OrbePodcasts/tools/cache/

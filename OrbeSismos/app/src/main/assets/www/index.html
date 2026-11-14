@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#04060c">
+  <title>Orbe Sismos</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/pro.css">
+  <link rel="stylesheet" href="css/sismos.css">
+  <link rel="stylesheet" href="css/uhd.css">
+</head>
+<body>
+  <div id="globe" aria-label="Globo terráqueo con sismos y volcanes"></div>
+
+  <div id="splash">
+    <div class="splash-logo"><img src="img/icono.png" width="112" height="112" alt=""></div>
+    <h1>Orbe Sismos</h1>
+    <p id="splash-msg">Conectando con los centros sismológicos…</p>
+    <div class="progress"><div id="splash-bar"></div></div>
+  </div>
+
+  <!-- Cabecera: tu zona y el último sismo cercano -->
+  <header class="top">
+    <div class="row">
+      <button class="zone" id="zone" aria-label="Tu zona y ajustes de alertas">
+        <span class="zone-dot" id="zone-dot"></span>
+        <span class="zone-text"><b id="zone-title">Tu zona</b><small id="zone-sub">Toca para elegir tu ubicación</small></span>
+      </button>
+      <button id="btn-alerts" class="icon-btn" aria-label="Ajustes de alarmas">
+        <svg viewBox="0 0 24 24"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>
+      </button>
+    </div>
+    <div class="chips" id="ranges" role="tablist" aria-label="Periodo">
+      <button class="chip" data-range="hour">Última hora</button>
+      <button class="chip" data-range="day" aria-selected="true">24 horas</button>
+      <button class="chip" data-range="week">7 días</button>
+      <button class="chip" data-range="month">30 días</button>
+      <button class="chip" data-layer="volcanes"><span class="dot" style="background:#c77dff;color:#c77dff"></span>Volcanes</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <!-- Aviso de tsunami activo -->
+  <div id="tsunami-banner" hidden></div>
+
+  <!-- Hoja con el contenido de cada pestaña -->
+  <section class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div><h2 id="sheet-title">—</h2><p id="sheet-sub"></p></div>
+      <button id="sheet-close" class="icon-btn small" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
+      </button>
+    </div>
+    <div class="sheet-tabs" id="sheet-tabs"></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+
+  <!-- Reproductor de radio -->
+  <div class="radio-bar" id="radio-bar" hidden>
+    <span id="rb-logo" class="rb-logo"></span>
+    <span class="rb-text"><span class="live">EN VIVO</span><span class="rb-name" id="rb-name">—</span></span>
+    <button class="icon-btn small" id="rb-stop" aria-label="Detener radio">
+      <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+    </button>
+  </div>
+
+  <!-- Barra de pestañas -->
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="mapa" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 0 0-6.9 12h3.4l1-2.2a2 2 0 0 1 .4-2.8l1.4-1c.4-.3.6-.7.6-1.2V6.5A2 2 0 0 1 14 4.3 8 8 0 0 0 12 4Zm5.5 2.2-1.5.8v2.5a3 3 0 0 1-1.3 2.4l-1.4 1 .4 1.1h2.8l1.4 2.4a8 8 0 0 0-.4-10.2Z"/></svg>Mapa</button>
+    <button data-tab="sismos"><svg viewBox="0 0 24 24"><path d="M2 12h3l2-5 3 10 3-14 3 12 2-3h4v2h-3l-3 5-2-9-3 13-3-11-1 2H2z"/></svg>Sismos</button>
+    <button data-tab="noticias"><svg viewBox="0 0 24 24"><path d="M4 4h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V4Zm2 3v3h9V7H6Zm0 5v2h9v-2H6Zm0 4v2h6v-2H6Zm13-9h2v11a2 2 0 0 1-2 2V7Z"/></svg>Noticias</button>
+    <button data-tab="radio"><svg viewBox="0 0 24 24"><path d="M3.2 6.3 16.4 1l.7 1.8L7.6 6.6H20a2 2 0 0 1 2 2V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.6c0-1 .5-1.9 1.2-2.3ZM7 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9-7v2h4v-2h-4Zm0 4v2h4v-2h-4Z"/></svg>Radio</button>
+    <button data-tab="seguridad"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm-1 5h2v5h-2V7Zm0 7h2v2h-2v-2Z"/></svg>Seguridad</button>
+  </nav>
+
+  <!-- Pantallas de emergencia (SOS y simulacro) -->
+  <div id="sos" hidden>
+    <div class="sos-title">SOS</div>
+    <p>Sirena y linterna encendidas. Muestra esta pantalla para que te encuentren.</p>
+    <button class="btn big" id="sos-stop">Detener</button>
+  </div>
+  <div id="drill" hidden>
+    <div class="drill-step" id="drill-step"></div>
+    <div class="drill-count" id="drill-count"></div>
+    <button class="btn" id="drill-stop">Terminar simulacro</button>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="lib/globe.gl.min.js"></script>
+  <script src="js/tierra-hd.js"></script>
+  <script src="lib/hls.min.js"></script>
+  <script src="js/guias.js"></script>
+  <script src="js/sismos.js"></script>
+</body>
+</html>

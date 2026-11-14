@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sismógrafo -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M2,12h3l2,-5 3,10 3,-14 3,12 2,-3h4v2h-3l-3,5 -2,-9 -3,13 -3,-11 -1,2H2z" />
+</vector>

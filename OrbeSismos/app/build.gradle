@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.orbesismos.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.orbesismos.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 6
+        versionName '1.5'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Para publicar en Play Store, configura aquí tu propia firma (signingConfig).
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Anuncios (AdMob): banner + intersticial
+    implementation 'com.google.android.gms:play-services-ads:24.9.0'
+    // Formulario de consentimiento (obligatorio para usuarios de la UE/Reino Unido)
+    implementation 'com.google.android.ump:user-messaging-platform:3.2.0'
+
+    // Revisión periódica de sismos en segundo plano (respaldo de la vigilancia en tiempo real)
+    implementation 'androidx.work:work-runtime:2.9.1'
+    implementation 'com.google.guava:guava:33.3.1-android'
+    // Compartir la tarjeta del sismo como imagen (FileProvider)
+    implementation 'androidx.core:core:1.13.1'
+    // Compra única "Premium sin anuncios"
+    implementation 'com.android.billingclient:billing:7.1.1'
+}

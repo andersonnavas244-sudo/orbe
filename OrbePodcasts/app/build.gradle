@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.orbepodcasts.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.orbepodcasts.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Para publicar en Play Store, configura aquí tu propia firma (signingConfig).
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Anuncios (AdMob): banner + intersticial con límite
+    implementation 'com.google.android.gms:play-services-ads:24.9.0'
+    implementation 'com.google.android.ump:user-messaging-platform:3.2.0'
+    // Reproductor (ExoPlayer) + sesión multimedia: segundo plano, controles en la pantalla bloqueada y Android Auto
+    implementation 'androidx.media3:media3-exoplayer:1.5.1'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.5.1'
+    implementation 'androidx.media3:media3-session:1.5.1'
+    // Chromecast
+    implementation 'com.google.android.gms:play-services-cast-framework:21.5.0'
+    implementation 'androidx.mediarouter:mediarouter:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    // Suscripción mensual "Premium sin anuncios"
+    implementation 'com.android.billingclient:billing:7.1.1'
+}

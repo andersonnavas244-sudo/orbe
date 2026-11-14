@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#04060c">
+  <title>Orbe Radio</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/pro.css">
+  <link rel="stylesheet" href="css/uhd.css">
+</head>
+<body>
+  <div id="globe" aria-label="Globo terráqueo con emisoras"></div>
+
+  <!-- Pantalla de carga -->
+  <div id="splash">
+    <div class="splash-logo"><img src="img/icono.png" width="112" height="112" alt=""></div>
+    <h1>Orbe Radio</h1>
+    <p id="splash-msg">Preparando el planeta…</p>
+    <div class="progress"><div id="splash-bar"></div></div>
+  </div>
+
+  <!-- Barra superior -->
+  <header class="top">
+    <div class="row">
+      <div class="search">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 0 1 5.96 12.05l4.25 4.24-1.42 1.42-4.24-4.25A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"/></svg>
+        <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Buscar radio, ciudad, género…">
+        <button id="q-clear" class="icon-btn small" aria-label="Borrar búsqueda" hidden>
+          <svg viewBox="0 0 24 24"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
+        </button>
+      </div>
+      <button id="btn-globe" class="icon-btn globe-btn" aria-label="Explorar el globo" hidden>
+        <span aria-hidden="true">🌍</span><span class="lbl">Explorar el globo</span>
+      </button>
+      <button id="btn-countries" class="icon-btn" aria-label="Países">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm6.9 6A8 8 0 0 0 15 4.6c.6 1 1.1 2.2 1.4 3.4h2.5ZM12 4.1c-.8 1.1-1.5 2.4-1.9 3.9h3.8c-.4-1.5-1.1-2.8-1.9-3.9ZM4.3 14h3.1a17 17 0 0 1 0-4H4.3a8 8 0 0 0 0 4Zm.8 2a8 8 0 0 0 3.9 3.4c-.6-1-1.1-2.2-1.4-3.4H5.1Zm2.5-8c.3-1.2.8-2.4 1.4-3.4A8 8 0 0 0 5.1 8h2.5ZM12 19.9c.8-1.1 1.5-2.4 1.9-3.9h-3.8c.4 1.5 1.1 2.8 1.9 3.9ZM14.3 14a15 15 0 0 0 0-4H9.7a15 15 0 0 0 0 4h4.6Zm.7 5.4a8 8 0 0 0 3.9-3.4h-2.5c-.3 1.2-.8 2.4-1.4 3.4Zm1.6-5.4h3.1a8 8 0 0 0 0-4h-3.1a17 17 0 0 1 0 4Z"/></svg>
+      </button>
+      <button id="btn-favs" class="icon-btn" aria-label="Favoritos e historial">
+        <svg viewBox="0 0 24 24"><path d="M12 21 10.6 19.7C5.4 15 2 11.9 2 8.1 2 5 4.4 2.6 7.5 2.6c1.7 0 3.4.8 4.5 2.1a6 6 0 0 1 4.5-2.1C19.6 2.6 22 5 22 8.1c0 3.8-3.4 6.9-8.6 11.6L12 21Z"/></svg>
+      </button>
+      <button id="btn-layers" class="icon-btn" aria-label="Capas y ajustes">
+        <svg viewBox="0 0 24 24"><path d="m12 2 10 5.5-10 5.5L2 7.5 12 2Zm-7.9 9.6L12 16l7.9-4.4L22 12.8 12 18.3 2 12.8l2.1-1.2Zm0 5L12 21l7.9-4.4 2.1 1.2L12 23.3 2 17.8l2.1-1.2Z"/></svg>
+      </button>
+    </div>
+    <div class="chips" id="chips" role="tablist" aria-label="Géneros"></div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <!-- Hoja inferior (listas) -->
+  <section class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div>
+        <h2 id="sheet-title">—</h2>
+        <p id="sheet-sub"></p>
+      </div>
+      <button id="sheet-close" class="icon-btn small" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></svg>
+      </button>
+    </div>
+    <div class="sheet-tabs" id="sheet-tabs"></div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+
+  <!-- Reproductor -->
+  <footer class="player" id="player" hidden>
+    <button class="player-info" id="player-info" aria-label="Ver emisora en el mapa">
+      <div class="logo" id="p-logo"></div>
+      <div class="meta">
+        <div class="name" id="p-name">—</div>
+        <div class="sub" id="p-sub"></div>
+      </div>
+    </button>
+    <div class="eq" id="p-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <button class="icon-btn" id="p-fav" aria-label="Favorito">
+      <svg viewBox="0 0 24 24"><path d="M12 21 10.6 19.7C5.4 15 2 11.9 2 8.1 2 5 4.4 2.6 7.5 2.6c1.7 0 3.4.8 4.5 2.1a6 6 0 0 1 4.5-2.1C19.6 2.6 22 5 22 8.1c0 3.8-3.4 6.9-8.6 11.6L12 21Z"/></svg>
+    </button>
+    <button class="icon-btn" id="p-shuffle" aria-label="Emisora aleatoria">
+      <svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.6l-3.1 4 3.1 4H17v-3l4 4-4 4v-3h-3.6l-3.5-4.5L6.4 18H3v-2h2.4l3.3-4-3.3-4H3V6h3.4l3.5 4.5L13.4 6H17V3Z"/></svg>
+    </button>
+    <button class="icon-btn" id="p-more" aria-label="Más opciones: compartir, TV, temporizador, alarma">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
+    </button>
+    <button class="play-btn" id="p-play" aria-label="Reproducir / pausar">
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      <span class="spinner"></span>
+    </button>
+  </footer>
+
+  <button class="explore-btn" id="btn-explore" aria-label="Explorar">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm4.2 5.8-6 2.2-2.2 6 6-2.2 2.2-6ZM12 10.8a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/></svg>Explorar
+  </button>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="reticle" aria-hidden="true"></div>
+  <div id="tv-hint" role="status" aria-live="polite"></div>
+
+  <script src="lib/globe.gl.min.js"></script>
+  <script src="js/tierra-hd.js"></script>
+  <script src="lib/hls.min.js"></script>
+  <script src="js/genres.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

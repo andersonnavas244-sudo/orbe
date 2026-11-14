@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Planeta con ondas de radio. Lienzo 108x108, zona segura central de 66. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- ondas -->
+    <path android:strokeColor="#FF4FA3" android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M30,34 A30,30 0 0,0 30,74" />
+    <path android:strokeColor="#FF4FA3" android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M78,34 A30,30 0 0,1 78,74" />
+    <!-- planeta -->
+    <path android:fillColor="#123A6B" android:pathData="M54,36 a18,18 0 1,0 0.01,0 z" />
+    <path android:strokeColor="#22D3EE" android:strokeWidth="3" android:fillColor="#00000000"
+        android:pathData="M54,36 a18,18 0 1,0 0.01,0 z" />
+    <path android:strokeColor="#22D3EE" android:strokeWidth="2" android:fillColor="#00000000"
+        android:pathData="M54,36 C45,42 45,66 54,72 C63,66 63,42 54,36 z" />
+    <path android:strokeColor="#22D3EE" android:strokeWidth="2" android:pathData="M36,54 L72,54" />
+    <!-- punto de emisora -->
+    <path android:fillColor="#FFFFFF" android:pathData="M63,44 a3,3 0 1,0 0.01,0 z" />
+</vector>

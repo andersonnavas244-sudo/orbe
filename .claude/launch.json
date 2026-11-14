@@ -1,0 +1,88 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "orbe-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        "RadioOrbe/app/src/main/assets/www",
+        "-p",
+        "5180",
+        "-c-1",
+        "-s"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "orbetv-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        "OrbeTV/app/src/main/assets/www",
+        "-p",
+        "5190",
+        "-c-1",
+        "-s"
+      ],
+      "port": 5190
+    },
+    {
+      "name": "orbesismos-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        "OrbeSismos/app/src/main/assets/www",
+        "-p",
+        "5200",
+        "-c-1",
+        "-s"
+      ],
+      "port": 5200
+    },
+    {
+      "name": "orbeespacio-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        "OrbeEspacio/app/src/main/assets/www",
+        "-p",
+        "5210",
+        "-c-1",
+        "-s"
+      ],
+      "port": 5210
+    },
+    {
+      "name": "orbeclima-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        "OrbeClima/app/src/main/assets/www",
+        "-p",
+        "5220",
+        "-c-1",
+        "-s"
+      ],
+      "port": 5220
+    },
+    {
+      "name": "orbe-raiz",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "http-server@14.1.1",
+        ".",
+        "-p",
+        "5170",
+        "-c-1"
+      ],
+      "port": 5170
+    }
+  ]
+}
