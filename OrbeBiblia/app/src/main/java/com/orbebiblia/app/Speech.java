@@ -35,6 +35,14 @@ public final class Speech {
 
     public void setRate(float r) { rate = Math.max(0.6f, Math.min(1.6f, r)); }
 
+    /** Cambia el idioma de la voz: "es" o "en" (para la King James). */
+    public void setLang(String lang) {
+        if (!ready) return;
+        Locale l = "en".equals(lang) ? Locale.US : Locale.forLanguageTag("es-419");
+        if (tts.isLanguageAvailable(l) < TextToSpeech.LANG_AVAILABLE) l = "en".equals(lang) ? Locale.ENGLISH : Locale.forLanguageTag("es");
+        tts.setLanguage(l);
+    }
+
     /** Lee el texto; los párrafos largos se parten para que la voz no se corte. */
     public void speak(String text) {
         if (!ready) { pendingText = text; return; }

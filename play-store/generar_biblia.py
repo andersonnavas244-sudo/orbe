@@ -26,10 +26,12 @@ GOLD = (245, 194, 107)
 TEXTS = [
     ('Jesús sostiene el mundo', 'y te regala un versículo cada día'),
     ('Un versículo para cada día', 'compártelo en tus estados'),
+    ('¿Cómo te sientes hoy?', 'palabras de Dios para cada momento'),
+    ('Tarjetas para enviar', 'buenos días, cumpleaños, Navidad y más'),
+    ('Lugares de la Biblia en 3D', 'Belén, Jerusalén y los viajes de Pablo'),
     ('Oraciones de la Biblia', 'Padre Nuestro, Salmo 23, Salmo 91…'),
-    ('La Biblia completa', 'Reina-Valera 1909, sin internet'),
-    ('Busca cualquier palabra', 'en los 31.102 versículos'),
-    ('Planes de lectura', 'la Biblia en 1 año, paso a paso'),
+    ('Trivia bíblica diaria', 'aprende y reta a tu familia'),
+    ('La Biblia completa', 'Reina-Valera 1909 y King James, sin internet'),
 ]
 
 

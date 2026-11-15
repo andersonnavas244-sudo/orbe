@@ -130,6 +130,7 @@ public class MainActivity extends Activity {
 
         DailyVerse.ensureChannel(this);
         DailyVerse.schedule(this);
+        PrayerReminder.scheduleAll(this);
         speech = new Speech(this, ev -> js("window.onNativeSpeech && onNativeSpeech(" + JSONObject.quote(ev) + ")"));
         if (DailyVerse.enabled(this)) askNotifications();
         handleIntent(getIntent());
@@ -201,12 +202,26 @@ public class MainActivity extends Activity {
                     + ",\"m\":" + DailyVerse.minute(MainActivity.this) + "}";
         }
 
+        /** Oración de la mañana ("manana") o de la noche ("noche"). */
+        @JavascriptInterface
+        public void setPrayer(String kind, boolean on, int h, int m) {
+            PrayerReminder.set(MainActivity.this, kind, on, h, m);
+            if (on) runOnUiThread(MainActivity.this::askNotifications);
+        }
+
+        @JavascriptInterface
+        public String getPrayer(String kind) {
+            return "{\"on\":" + PrayerReminder.enabled(MainActivity.this, kind) + ",\"h\":" + PrayerReminder.hour(MainActivity.this, kind)
+                    + ",\"m\":" + PrayerReminder.minute(MainActivity.this, kind) + "}";
+        }
+
         /** Muestra ya la notificación del versículo (para probarla). */
         @JavascriptInterface public void testDaily() { runOnUiThread(MainActivity.this::askNotifications); DailyVerse.show(MainActivity.this); }
 
         /** Lectura en voz alta. */
         @JavascriptInterface public void speak(String text, float rate) { speech.setRate(rate); speech.speak(text); }
         @JavascriptInterface public void stopSpeak() { speech.stop(); }
+        @JavascriptInterface public void speakIn(String text, float rate, String lang) { speech.setLang(lang); speech.setRate(rate); speech.speak(text); }
 
         @JavascriptInterface
         public void share(String text) {

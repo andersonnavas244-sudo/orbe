@@ -44,6 +44,8 @@
 
         <!-- Versículo del día -->
         <receiver android:name=".DailyVerse" android:exported="false" />
+        <!-- Oración de la mañana y de la noche -->
+        <receiver android:name=".PrayerReminder" android:exported="false" />
 
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>

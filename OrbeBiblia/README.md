@@ -3,8 +3,8 @@
 La Santa Biblia completa (Reina-Valera 1909, dominio público) sin internet, con el versículo del día,
 oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
 
-- Paquete: `com.orbebiblia.app` · versión 1.0 (código 1) · Android 8.0 o superior
-- APK de prueba: `dist/OrbeBiblia-1.0.apk`
+- Paquete: `com.orbebiblia.app` · versión 1.1 (código 2) · Android 8.0 o superior
+- APK de prueba: `dist/OrbeBiblia-1.1.apk`
 
 ## Funciones
 
@@ -13,6 +13,11 @@ oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
   (Padre Nuestro, Salmos 23, 91, 121 y 51, Bienaventuranzas, 1 Corintios 13, bendición de Números 6) y tu plan.
 - **Biblia:** 66 libros, letra capital dorada, resaltados de 4 colores, favoritos, copiar, compartir como imagen,
   escuchar en voz alta (motor de voz del teléfono), tamaño de letra y temas Noche / Sepia / Claro.
+- **Para cada día** (`js/extras.js`): ¿cómo te sientes hoy? (10 sentimientos), «Buenos días / Buenas noches con
+  Dios» (imagen lista para WhatsApp), 12 tarjetas para fechas con 8 fondos dibujados en la app, oración de la mañana
+  y de la noche con aviso (`PrayerReminder.java`), trivia diaria (90 preguntas, 5 por día), lugares de la Biblia en
+  el globo 3D con las rutas de Abraham, el Éxodo y Pablo, racha de días con insignias y diario de oración.
+- **Versiones:** Reina-Valera 1909 y King James Version (inglés, `www/data/kjv/`).
 - **Buscar:** cualquier palabra o frase en los 31.102 versículos (sin tildes ni mayúsculas).
 - **Planes:** la Biblia en 1 año, el Nuevo Testamento en 90 días, y Salmos y Proverbios en 31 días.
 - **Más:** favoritos, versículo del día por notificación a la hora elegida, velocidad de la voz, Premium.
@@ -30,7 +35,7 @@ oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
 | Lectura en voz alta | `Speech.java` |
 | Anuncios y Premium | `AdsManager.java`, `AdsConfig.java`, `BillingManager.java` |
 
-Para regenerar los datos:
+Para regenerar los datos (el contenido extra y la King James salen de `tools/build_extras.py`):
 
 ```bash
 python OrbeBiblia/tools/build_biblia.py spaRV1909_vpl.txt

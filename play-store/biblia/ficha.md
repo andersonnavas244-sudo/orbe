@@ -6,7 +6,7 @@ Orbe Biblia: Versículo del Día
 
 ## Descripción breve (máx. 80 caracteres)
 
-La Biblia completa sin internet, con un versículo para cada día y oraciones.
+La Biblia sin internet: versículo del día, oraciones, trivia y lugares en 3D.
 
 ## Descripción completa (máx. 4.000 caracteres)
 
@@ -18,6 +18,17 @@ La Biblia completa sin internet, con un versículo para cada día y oraciones.
 • Compártelo como una imagen hermosa en tus estados de WhatsApp, Instagram y Facebook.
 • Notificación diaria a la hora que tú elijas.
 
+😊 ¿CÓMO TE SIENTES HOY?
+• Triste, ansioso, solo, con miedo, enfermo, cansado, agradecido… y la Palabra de Dios para ese momento.
+
+☀️ BUENOS DÍAS CON DIOS Y TARJETAS
+• Cada mañana una imagen lista para enviar por WhatsApp, y de noche, «Buenas noches con Dios».
+• Tarjetas con versículos para cumpleaños, ánimo, condolencias, Navidad, Año Nuevo, bodas, Día de la Madre y del Padre, con el nombre de la persona y 8 fondos.
+
+🌅 ORACIÓN DE LA MAÑANA Y DE LA NOCHE
+• Una oración corta cada mañana y cada noche, con aviso a la hora que elijas.
+• Mi diario de oración: escribe tus peticiones y marca cuando Dios responda.
+
 🙏 ORACIONES DE LA BIBLIA
 • Padre Nuestro, Salmo 23, Salmo 91, Salmo 121, las Bienaventuranzas, el himno al amor, la bendición de Números y el Salmo 51.
 • Escúchalas en voz alta o compártelas con tu familia.
@@ -25,8 +36,17 @@ La Biblia completa sin internet, con un versículo para cada día y oraciones.
 💬 PALABRAS PARA CADA MOMENTO
 • Más de 200 versículos escogidos por tema: ánimo, fe, amor, paz, familia, gratitud, sabiduría y esperanza.
 
+🌍 LUGARES DE LA BIBLIA EN 3D
+• Belén, Nazaret, Jerusalén, el Mar Rojo, el monte Sinaí, Babilonia, Roma… sobre un planeta en 3D.
+• Las rutas de Abraham, el Éxodo y los viajes de Pablo. Toca un lugar y lee lo que pasó allí.
+
+🧠 TRIVIA BÍBLICA Y RACHA
+• 5 preguntas nuevas cada día; comparte tu puntaje y reta a tu familia.
+• Racha de días e insignias para leer la Biblia todos los días.
+
 📚 LA BIBLIA COMPLETA
 • Los 66 libros del Antiguo y el Nuevo Testamento: Reina-Valera 1909, con las tildes actualizadas.
+• También en inglés: King James Version.
 • Funciona sin internet.
 • Letra grande o pequeña y lectura de noche, sepia o clara.
 • Resalta versículos con colores y guarda tus favoritos.
@@ -58,7 +78,7 @@ Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público).
 ## Respuestas para los formularios de Play Console
 
 - **Ubicación:** no se usa.
-- **Notificaciones:** versículo del día a la hora que elige la persona (se puede apagar en la app).
+- **Notificaciones:** versículo del día, oración de la mañana y oración de la noche, a la hora que elige la persona (se pueden apagar en la app).
 - **Anuncios:** sí (AdMob): banner y como máximo 2 anuncios a pantalla completa cada 40 minutos; nunca mientras se escucha la lectura.
 - **Público objetivo:** 13 años o más.
 - **Contenido:** texto bíblico de dominio público; sin contenido generado por usuarios.
@@ -69,6 +89,6 @@ Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público).
 |---|---|
 | `icono-512.png` | Icono de la app |
 | `destacada-1024x500.png` | Gráfico de funciones (imagen destacada) |
-| `publicidad/tienda-1..6.png` | Capturas de pantalla del teléfono (con marco y título) |
+| `publicidad/tienda-1..8.png` | Capturas de pantalla del teléfono (con marco y título) |
 | `capturas/telefono-*.png` | Capturas sin marco (alternativa) |
 | `publicidad/redes-*.png`, `publicidad/facebook-*.png` | Publicidad en redes sociales |

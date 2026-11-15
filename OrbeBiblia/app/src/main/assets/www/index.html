@@ -29,6 +29,7 @@
   <header class="top">
     <div class="brand"><img src="img/icono.png" alt=""><div><b>ORBE BIBLIA</b><small id="today-date"></small></div></div>
     <div class="top-btns">
+      <button class="racha" id="racha" hidden aria-label="Racha de días">🔥 0</button>
       <button class="icon-btn" id="btn-music" aria-label="Música para orar"><i data-ico="music"></i></button>
       <button class="icon-btn" id="btn-search-top" aria-label="Buscar"><i data-ico="search"></i></button>
     </div>
@@ -49,12 +50,34 @@
       </div>
     </article>
     <section class="block">
+      <h3>¿Cómo te sientes hoy?</h3>
+      <div id="x-sentir"></div>
+    </section>
+    <section class="block">
+      <div id="x-buenos"></div>
+    </section>
+    <section class="block">
+      <h3>Oración del día</h3>
+      <div id="x-oracion"></div>
+    </section>
+    <section class="block">
+      <div id="x-lugares"></div>
+    </section>
+    <section class="block">
       <h3>Palabras para cada momento</h3>
       <div class="temas" id="temas"></div>
     </section>
     <section class="block">
       <h3>Oraciones de la Biblia</h3>
       <div id="oraciones"></div>
+    </section>
+    <section class="block">
+      <h3>Juega y aprende</h3>
+      <div id="x-trivia"></div>
+    </section>
+    <section class="block">
+      <h3>Tarjetas con versículos</h3>
+      <div id="x-tarjetas"></div>
     </section>
     <section class="block" id="hoy-plan"></section>
     <section class="block">
@@ -119,6 +142,16 @@
     </div>
   </section>
 
+  <!-- Lugares de la Biblia en el globo 3D -->
+  <section id="mapa" hidden>
+    <div id="mapa-globe"></div>
+    <header class="mapa-top">
+      <button class="icon-btn" data-x="mapa-cerrar" aria-label="Volver"><i data-ico="back"></i></button>
+      <div><b>Lugares de la Biblia</b><small>Toca un lugar para leer lo que pasó allí</small></div>
+    </header>
+    <div class="mapa-rutas" id="mapa-rutas"></div>
+  </section>
+
   <!-- Hoja para elegir libro/capítulo, temas, etc. -->
   <div id="sheet" class="sheet" aria-hidden="true">
     <div class="sheet-handle"></div>
@@ -131,6 +164,7 @@
 
   <script src="lib/globe.gl.min.js"></script>
   <script src="js/tierra-hd.js"></script>
+  <script src="js/extras.js"></script>
   <script src="js/biblia.js"></script>
 </body>
 </html>

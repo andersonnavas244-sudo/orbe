@@ -7,8 +7,8 @@ de lectura. Esta política explica qué datos se usan y por qué.
 
 ## 1. Datos que se guardan solo en tu teléfono
 
-Tus favoritos, los versículos que resaltas, tu avance en los planes de lectura, el último capítulo que leíste, tus
-ajustes (tamaño de letra, tema de lectura, hora del versículo diario) y si tienes Premium. **No salen de tu
+Tus favoritos, los versículos que resaltas, tu diario de oración, tu racha de días, tus resultados de la trivia, tu
+avance en los planes de lectura, el último capítulo que leíste, tus ajustes (tamaño de letra, tema de lectura, hora del versículo diario) y si tienes Premium. **No salen de tu
 teléfono** y se borran al desinstalar la app. No pedimos cuenta, nombre ni correo.
 
 ## 2. Sin internet
@@ -23,8 +23,8 @@ motor según su propia política; Orbe Biblia no lo envía a ningún servidor pr
 
 ## 4. Notificaciones
 
-Si lo permites, la app muestra una vez al día el versículo del día a la hora que elijas. Puedes apagarla en la
-sección *Más* o en los ajustes de notificaciones del teléfono.
+Si lo permites, la app muestra el versículo del día y, si los activas, la oración de la mañana y la de la noche, a
+la hora que elijas. Puedes apagarlos en la sección *Más* o en los ajustes de notificaciones del teléfono.
 
 ## 5. Compartir
 
@@ -54,7 +54,7 @@ La app no está dirigida a menores de 13 años y no recoge a sabiendas datos de 
 
 ## 10. Créditos
 
-Texto bíblico: Santa Biblia Reina-Valera 1909, dominio público (eBible.org), con las tildes actualizadas.
+Texto bíblico: Santa Biblia Reina-Valera 1909 y King James Version, dominio público (eBible.org).
 Imagen de Jesús: creada para Orbe Biblia con inteligencia artificial. Texturas de la Tierra: NASA.
 
 ## 11. Contacto

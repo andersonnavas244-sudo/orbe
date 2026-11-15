@@ -40,13 +40,27 @@
   window.orbeToast = m => toast(m, 3500);
 
   // ---------- datos ----------
-  const state = { libros: [], byCode: {}, cache: new Map(), diario: [], temas: {}, tab: 'hoy', reader: null, sel: new Set(), speaking: null, premium: false };
+  const state = { libros: [], byCode: {}, cache: new Map(), diario: [], temas: {}, tab: 'hoy', reader: null, sel: new Set(), speaking: null, premium: false,
+    version: store.get('version', 'rv'), kjvNames: null };
   const getJSON = url => fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
-  const loadBook = code => {
-    if (!state.cache.has(code)) state.cache.set(code, getJSON(`data/biblia/${code}.json`));
-    return state.cache.get(code);
+  // ver: 'rv' (Reina-Valera 1909) o 'kjv' (King James, inglés). Por defecto, la que eligió la persona.
+  const loadBook = (code, ver = state.version) => {
+    const key = ver + ':' + code;
+    if (!state.cache.has(key)) state.cache.set(key, getJSON(`data/${ver === 'kjv' ? 'kjv' : 'biblia'}/${code}.json`));
+    return state.cache.get(key);
   };
   const bookName = code => (state.byCode[code] || {}).n || code;
+  // nombre del libro en la versión que se está leyendo (en inglés para la King James)
+  const readName = code => (state.version === 'kjv' && state.kjvNames && state.kjvNames[code]) || bookName(code);
+  const isKJV = () => state.version === 'kjv';
+  async function setVersion(v) {
+    state.version = v; store.set('version', v);
+    if (v === 'kjv' && !state.kjvNames) {
+      const m = await getJSON('data/kjv/libros.json');
+      state.kjvNames = {}; m.forEach(b => { state.kjvNames[b.c] = b.n; });
+    }
+    allLoaded = null;
+  }
   const refOf = (code, c, vs) => `${bookName(code)} ${c}:${vs.length > 1 ? `${vs[0]}-${vs[vs.length - 1]}` : vs[0]}`;
   const keyOf = (code, c, v) => `${code}.${c}.${v}`;
   function parseRef(ref) {   // "Salmos 23:1" -> {code, c, v}
@@ -197,6 +211,7 @@
       return `<button class="tema" data-tema="${k}"><span class="em" style="background:linear-gradient(135deg,${col},${col}88)">${em}</span>${esc(t.n)}</button>`;
     }).join('');
     renderOraciones();
+    if (window.OrbeExtras) OrbeExtras.hoy();
     renderHoyPlan();
     const last = store.get('ultimo', null);
     $('#continuar').innerHTML = last
@@ -258,11 +273,11 @@
   function renderBooks(t = store.get('testamento', 'AT')) {
     store.set('testamento', t);
     document.querySelectorAll('#testamento button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
-    $('#books').innerHTML = state.libros.filter(b => b.t === t).map(b => `<button class="book" data-book="${b.c}"><b>${esc(b.n)}</b><small>${b.caps} cap.</small></button>`).join('');
+    $('#books').innerHTML = state.libros.filter(b => b.t === t).map(b => `<button class="book" data-book="${b.c}"><b>${esc(readName(b.c))}</b><small>${b.caps} ${isKJV() ? 'ch.' : 'cap.'}</small></button>`).join('');
   }
   function pickChapter(code) {
     const b = state.byCode[code]; const read = store.get('leidos', {});
-    openSheet(b.n, `${b.caps} capítulos · elige uno`, `<div class="caps">${Array.from({ length: b.caps }, (_, i) =>
+    openSheet(readName(code), `${b.caps} capítulos · elige uno`, `<div class="caps">${Array.from({ length: b.caps }, (_, i) =>
       `<button data-open="${code}.${i + 1}" class="${read[`${code}.${i + 1}`] ? 'done' : ''}">${i + 1}</button>`).join('')}</div>`);
   }
   let chapterTurns = 0;
@@ -274,13 +289,13 @@
     state.sel.clear(); $('#r-sel').hidden = true;
     stopSpeak();
     $('#reader').hidden = false; document.body.classList.add('reading'); pauseGlobe(true);
-    $('#r-title').textContent = `${b.n} ${c}`;
+    $('#r-title').textContent = `${readName(code)} ${c}`;
     const body = $('#r-body');
     body.innerHTML = '<div class="spinner"></div>';
     const data = await loadBook(code);
     if (!state.reader || state.reader.code !== code || state.reader.c !== c) return;
     const hl = highlights(), f = favs();
-    body.innerHTML = `<h2>${esc(b.n)} ${c}</h2><span class="orn">✦ ✦ ✦</span>` + data[c - 1].map((t, i) => {
+    body.innerHTML = `<h2>${esc(readName(code))} ${c}</h2>${isKJV() ? '<span class="orn">King James Version</span>' : '<span class="orn">✦ ✦ ✦</span>'}` + data[c - 1].map((t, i) => {
       const k = keyOf(code, c, i + 1);
       const cls = `v${hl[k] ? ' hl-' + hl[k] : ''}${f[k] ? ' fav' : ''}`;
       // primera letra del capítulo grande y dorada, como en las Biblias impresas
@@ -311,7 +326,8 @@
     const r = state.reader; if (!r) return null;
     const vs = [...state.sel].sort((a, b) => a - b);
     const texts = vs.map(v => verseText(v));
-    return { ...r, vs, text: texts.join(' '), ref: refOf(r.code, r.c, vs) };
+    const ref = `${readName(r.code)} ${r.c}:${vs.length > 1 ? `${vs[0]}-${vs[vs.length - 1]}` : vs[0]}`;
+    return { ...r, vs, text: texts.join(' '), ref };
   }
   // texto de un versículo del lector (sin el número)
   function verseText(v) {
@@ -333,13 +349,14 @@
   // =====================================================================
   //  Voz
   // =====================================================================
-  function speak(text, label) {
+  function speak(text, label, lang = 'es') {
     stopSpeak();
     state.speaking = label || 'texto';
     const rate = store.get('velocidad', 0.95);
-    if (NATIVE && N.speak) N.speak(text, rate);
+    if (NATIVE && N.speakIn) N.speakIn(text, rate, lang);
+    else if (NATIVE && N.speak) N.speak(text, rate);
     else if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text); u.lang = 'es-ES'; u.rate = rate; u.onend = () => onSpeech('done');
+      const u = new SpeechSynthesisUtterance(text); u.lang = lang === 'en' ? 'en-US' : 'es-ES'; u.rate = rate; u.onend = () => onSpeech('done');
       speechSynthesis.speak(u);
     }
     toast('🔊 Leyendo en voz alta… toca otra vez para detener');
@@ -428,7 +445,7 @@
   // =====================================================================
   //  Buscar
   // =====================================================================
-  let allLoaded = null;
+  var allLoaded = null;
   const loadAll = () => allLoaded || (allLoaded = Promise.all(state.libros.map(b => loadBook(b.c).then(d => [b.c, d]))));
   async function search(q) {
     q = q.trim(); if (q.length < 2) return;
@@ -442,7 +459,7 @@
     }));
     const mark = t => { const f = fold(t), i = f.indexOf(fq); return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length)); };
     $('#s-res').innerHTML = (total ? `<p class="hint">${total.toLocaleString('es')} versículos${total > 300 ? ' (se muestran los primeros 300)' : ''}</p>` : '<div class="empty">No se encontró. Prueba con otra palabra.</div>')
-      + out.map(([code, c, v, t]) => `<button class="res" data-open="${code}.${c}.${v}"><cite>${esc(bookName(code))} ${c}:${v}</cite><p>${mark(t)}</p></button>`).join('');
+      + out.map(([code, c, v, t]) => `<button class="res" data-open="${code}.${c}.${v}"><cite>${esc(readName(code))} ${c}:${v}</cite><p>${mark(t)}</p></button>`).join('');
   }
 
   // =====================================================================
@@ -494,7 +511,9 @@
     const daily = NATIVE && N.getDaily ? JSON.parse(N.getDaily()) : store.get('diario', { on: true, h: 7, m: 0 });
     const fs = store.get('letra', 19), vel = store.get('velocidad', 0.95);
     const pad = n => String(n).padStart(2, '0');
-    $('#v-mas').innerHTML = `<section class="block" style="margin-top:4px"><h3>Tus favoritos (${f.length})</h3>
+    $('#v-mas').innerHTML = (window.OrbeExtras ? OrbeExtras.mas() : '') + `<section class="block"><h3>Versión de la Biblia</h3>
+        <div class="seg" style="position:static"><button data-ver="rv" aria-pressed="${!isKJV()}">Reina-Valera 1909</button><button data-ver="kjv" aria-pressed="${isKJV()}">King James (English)</button></div></section>
+      <section class="block"><h3>Tus favoritos (${f.length})</h3>
       ${f.length ? f.slice(0, 60).map(([, x]) => verseCard(x.ref, x.text)).join('') : '<div class="empty">Toca ♥ en cualquier versículo para guardarlo aquí.</div>'}</section>
       <section class="block"><h3>Versículo del día</h3>
         <button class="toggle" data-set="diario" role="switch" aria-checked="${daily.on}"><span>Notificación diaria<small>Un versículo cada mañana para empezar el día</small></span><span class="switch"></span></button>
@@ -555,6 +574,7 @@
       }
       const pl = t.closest('[data-plan]'); if (pl) { store.set('plan', { id: pl.dataset.plan, start: new Date().setHours(0, 0, 0, 0), done: [] }); toast(`📅 Empezaste: ${PLANES[pl.dataset.plan].n}`); renderPlanes(); return; }
       const fsb = t.closest('[data-fs]'); if (fsb) { setFontSize(+fsb.dataset.fs); renderMas(); return; }
+      const vb2 = t.closest('[data-ver]'); if (vb2) { setVersion(vb2.dataset.ver).then(() => { renderMas(); toast(vb2.dataset.ver === 'kjv' ? '📖 King James Version (English)' : '📖 Reina-Valera 1909'); }); return; }
       const vb = t.closest('[data-vel]'); if (vb) { store.set('velocidad', +vb.dataset.vel); renderMas(); return; }
       const st = t.closest('[data-set="diario"]'); if (st) {
         const on = st.getAttribute('aria-checked') !== 'true'; st.setAttribute('aria-checked', String(on));
@@ -578,6 +598,7 @@
       else if (act === 'vd-fav') { const r = parseRef(v.ref); if (r) a.classList.toggle('on', toggleFav(keyOf(r.code, r.c, r.v), v.ref, v.text)); }
       else if (act === 'vd-read') { const r = parseRef(v.ref); if (r) openReader(r.code, r.c, r.v); }
       else if (act === 'r-close') closeReader();
+      else if (window.OrbeExtras && OrbeExtras.act(act, a)) { /* lo maneja extras.js */ }
       else if (act === 'r-pick') { if (state.reader) pickChapter(state.reader.code); }
       else if (act === 'r-prev') stepChapter(-1);
       else if (act === 'r-next') stepChapter(1);
@@ -589,7 +610,7 @@
       else if (act === 'r-listen') {
         if (state.speaking) { stopSpeak(); return; }
         const r = state.reader; if (!r) return;
-        loadBook(r.code).then(d => speak(`${bookName(r.code)}, capítulo ${r.c}. ` + d[r.c - 1].join(' '), 'capitulo'));
+        loadBook(r.code).then(d => speak(isKJV() ? `${readName(r.code)}, chapter ${r.c}. ` + d[r.c - 1].join(' ') : `${bookName(r.code)}, capítulo ${r.c}. ` + d[r.c - 1].join(' '), 'capitulo', isKJV() ? 'en' : 'es'));
       }
       else if (act === 's-fav') {
         const s = selectedVerses(); if (!s) return;
@@ -603,7 +624,7 @@
         const txt = `“${s.text}” ${s.ref} (RV1909)`;
         (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('📋 Copiado')).catch(() => { if (NATIVE) N.share(txt); });
       }
-      else if (act === 's-listen') { const s = selectedVerses(); if (s) speak(`${s.text}. ${s.ref}.`, 'sel'); }
+      else if (act === 's-listen') { const s = selectedVerses(); if (s) speak(`${s.text}. ${s.ref}.`, 'sel', isKJV() ? 'en' : 'es'); }
       else if (act === 'sheet-close') closeSheet();
       else if (act === 'ora-listen' && state.oracion) state.speaking ? stopSpeak() : speak(`${state.oracion.text}. ${state.oracion.ref}.`, 'oracion');
       else if (act === 'ora-share' && state.oracion) shareImage(state.oracion.text, state.oracion.ref);
@@ -655,27 +676,38 @@
 
   window.orbeBack = () => {
     if (state.sel.size) { state.sel.clear(); document.querySelectorAll('#r-body .sel').forEach(x => x.classList.remove('sel')); updateSel(); return true; }
+    if (window.OrbeExtras && OrbeExtras.back()) return true;
     if (sheetOpen()) { closeSheet(); return true; }
     if (!$('#reader').hidden) { closeReader(); return true; }
     if (state.tab !== 'hoy') { selectTab('hoy'); return true; }
     return false;
   };
-  window.orbeOpen = what => { if (what === 'hoy') { if (!$('#reader').hidden) closeReader(); closeSheet(); selectTab('hoy'); } };
+  window.orbeOpen = what => {
+    if (!$('#reader').hidden) closeReader();
+    closeSheet(); selectTab('hoy');
+    if (/^oracion-/.test(what) && window.OrbeExtras) setTimeout(() => OrbeExtras.openOracionDia(what.slice(8)), 400);
+  };
   window.onNativePremium = (p) => { state.premium = !!p; if (state.tab === 'mas') renderMas(); };
   // Para el video y las capturas de la tienda
   window.__orbeDebug = { state, openReader, selectTab, openTema, openOracion, search, shareImage, layoutHero, get globe() { return globe; } };
 
+  // Funciones que usa js/extras.js (sentimientos, tarjetas, trivia, mapa, racha, diario…)
+  window.__B = { $, N, NATIVE, PLAY, store, esc, svg, ICO, toast, paintIcons, openSheet, closeSheet, loadBook, parseRef, refOf, keyOf, bookName,
+    openReader, speak, stopSpeak, verseCard, isFav, toggleFav, loadImg, wrapLines, getJSON, selectTab, state,
+    get globe() { return globe; }, get cuadro() { return cuadro; }, get heroBox() { return heroBox; }, sheetOpen };
   async function start() {
     setFontSize(store.get('letra', 19));
     paintIcons();
     const [libros, diario, temas, cd] = await Promise.all([getJSON('data/biblia/libros.json'), getJSON('data/diario.json'), getJSON('data/temas.json'),
       getJSON('data/cuadro.json').catch(() => null)]);
     if (cd) cuadro = cd;
+    if (state.version === 'kjv') await setVersion('kjv').catch(() => setVersion('rv'));
     setReaderTheme(store.get('tema-lectura', 'noche'));
     state.libros = libros; libros.forEach(b => { state.byCode[b.c] = b; });
     state.diario = diario; state.temas = temas;
     if (NATIVE && N.isPremium) state.premium = N.isPremium();
     bind();
+    if (window.OrbeExtras) await OrbeExtras.init(window.__B).catch(e => console.warn('extras', e));
     renderHoy();
     dust();
     try { initGlobe(); } catch (e) { hideSplash(); }
