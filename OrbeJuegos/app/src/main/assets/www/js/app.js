@@ -41,7 +41,7 @@
   /* ---------------- inicio ---------------- */
   function inicio() {
     limpiar(); app.pantalla = 'inicio';
-    if (!OJ.juego || !OJ.juego.demo) { const g = OJ.Tejo({ demo: true, meta: 1e9 }); g.demo = true; OJ.setGame(g); }
+    if (!OJ.juego || !OJ.juego.demo) { const g = OJ.Tejo({ demo: true, meta: 1e9, nombre: prefs.tejo.nombre, num: prefs.tejo.num }); g.demo = true; OJ.setGame(g); }
     const h = el('div', 'home', `
       <div class="franja"><i></i><i></i><i></i></div>
       <div class="logo">Juegos de <b>Colombia</b></div>
@@ -68,6 +68,9 @@
       <h2>Tejo 3D</h2><p>Lanza el tejo a la cancha de greda y revienta las mechas del bocín.</p>
       <div class="reglas"><b>Mecha 3</b> · revientas una mecha<br><b>Embocinada 6</b> · el tejo queda dentro del bocín<br><b>Moñona 9</b> · revientas la mecha y quedas en el bocín<br><b>Mano 1</b> · si nadie revienta, gana el tejo más cercano</div>
       ${segmento('Jugadores', 'modo', [['ia', '1 jugador', 'contra la máquina'], ['2j', '2 jugadores', 'en el mismo celular']], p.modo)}
+      <h3>Tu camiseta</h3>
+      <div class="camiseta"><input data-c="nombre" maxlength="12" placeholder="Tu nombre" autocomplete="off"><input data-c="num" type="number" min="1" max="99" placeholder="10" inputmode="numeric"></div>
+      <div class="camiseta" data-r="otro"><input data-c="nombre2" maxlength="12" placeholder="Nombre del rival" autocomplete="off"><input data-c="num2" type="number" min="1" max="99" placeholder="7" inputmode="numeric"></div>
       ${segmento('Dificultad', 'dif', [[0, 'Fácil'], [1, 'Normal'], [2, 'Difícil']], p.dif)}
       ${segmento('Partida a', 'meta', [[9, '9', 'rápida'], [15, '15'], [27, '27', 'tradicional']], p.meta)}
       <button class="btn" data-x="jugar">Jugar</button>` : j === 'parques' ? `
@@ -97,8 +100,17 @@
     const reglas = v.querySelector('[data-r="reglas"]'), meta = v.querySelector('[data-r="meta"]');
     const verModo = () => {
       if (j === 'parques') v.querySelector('[data-r="dif"]').classList.toggle('oculto', p.modo === 'local');
+      if (j === 'tejo') v.querySelector('[data-r="otro"]').classList.toggle('oculto', p.modo === 'ia');
       if (j !== 'billar') return; reglas.innerHTML = REGLAS_BILLAR[p.modo]; meta.classList.toggle('oculto', p.modo === 'bola8' || p.modo === 'bola9'); };
     verModo();
+    v.querySelectorAll('.camiseta input').forEach(inp => {      // nombre y número de la camiseta (se guardan en el celular)
+      const k = inp.dataset.c; inp.value = p[k] || '';
+      inp.addEventListener('input', () => {
+        if (k.startsWith('num')) { const n = Math.max(0, Math.min(99, parseInt(inp.value, 10) || 0)); inp.value = n || ''; p[k] = n || ''; }
+        else { inp.value = inp.value.replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü0-9 .'-]/g, ''); p[k] = inp.value.trim(); }
+        store.set('prefs', prefs);
+      });
+    });
     v.querySelectorAll('.seg button').forEach(b => {
       b.onclick = () => {
         const k = b.parentNode.dataset.k, val = b.dataset.v; p[k] = /^\d+$/.test(val) ? +val : val;

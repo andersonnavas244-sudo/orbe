@@ -138,7 +138,10 @@
     opt = Object.assign({ modo: 'ia', dif: 1, meta: 27, demo: false }, opt);
     const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(50, 1, 0.05, 240);
     const game = { scene, cam, exposure: 1.0, nombre: 'tejo' };
-    const nombres = opt.modo === 'ia' ? ['Tú', 'Máquina'] : ['Azules', 'Rojos'];
+    const limpio = t => String(t || '').replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü0-9 .'-]/g, '').trim().slice(0, 12);
+    const propio = [limpio(opt.nombre), limpio(opt.nombre2)], dorsal = [String(+opt.num || 10), String(+opt.num2 || 7)];
+    const nombres = opt.modo === 'ia' ? [propio[0] || 'Tú', 'Máquina'] : [propio[0] || 'Azules', propio[1] || 'Rojos'];
+    const conNombre = i => opt.modo !== 'ia' && !!propio[i];
     const esIA = t => opt.demo || (opt.modo === 'ia' && t === 1);
     const rnd = OJ.rnd, extra = [];
     const colM = std({ vertexColors: true, roughness: .8 }), vegM = std({ vertexColors: true, roughness: 1, side: THREE.DoubleSide });
@@ -311,13 +314,17 @@
         [.25, .75].forEach(x => { g.fillStyle = u[1]; g.fillRect(w * x - 13, h * .27, 18, h); g.fillStyle = u[2]; g.fillRect(w * x + 5, h * .27, 8, h); });
         g.fillStyle = u[1]; g.fillRect(0, 0, w, h * .036); g.fillStyle = u[2]; g.fillRect(0, h * .036, w, h * .012);
         g.fillStyle = u[1]; g.fillRect(0, h * .976, w, h * .024);
-        g.save(); g.translate(w / 2, 0); g.scale(.65, 1); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = u[3];
-        g.font = '800 98px "Baloo 2", "Arial Black", sans-serif'; g.fillText('COLOMBIA', 0, h * .25);
-        g.font = '800 400px "Baloo 2", "Arial Black", sans-serif'; g.fillText(u[4], 0, h * .52);
+        g.save(); g.translate(w / 2, 0); g.scale(.65, 1); g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+        const borde = u[0] === '#f5cc10' ? 'rgba(255,255,255,.9)' : 'rgba(0,0,0,.35)', nom = (u[5] || 'COLOMBIA').toUpperCase();
+        let px = 104; g.font = '800 ' + px + 'px "Baloo 2", "Arial Black", sans-serif';
+        while (g.measureText(nom).width > w * 0.62 / 0.65 && px > 50) { px -= 4; g.font = '800 ' + px + 'px "Baloo 2", "Arial Black", sans-serif'; }
+        g.strokeStyle = borde; g.lineWidth = px * .1; g.strokeText(nom, 0, h * .25); g.fillStyle = u[3]; g.fillText(nom, 0, h * .25);
+        const n = u[4].length > 1 ? 400 : 440; g.font = '800 ' + n + 'px "Baloo 2", "Arial Black", sans-serif';
+        g.lineWidth = 22; g.strokeText(u[4], 0, h * .53); g.fillStyle = u[3]; g.fillText(u[4], 0, h * .53);
         g.restore();
       });
     }
-    const UNI = [(opt.modo === 'ia' || opt.demo) ? ['#f5cc10', '#0c3b93', '#cf142b', '#0c3b93', '10'] : ['#1a49b0', '#f5cc10', '#cf142b', '#ffffff', '10'], ['#cf142b', '#f5cc10', '#0c3b93', '#fff3c4', '7']]
+    const UNI = [(opt.modo === 'ia' || opt.demo) ? ['#f5cc10', '#0c3b93', '#cf142b', '#0c3b93', dorsal[0], propio[0]] : ['#1a49b0', '#f5cc10', '#cf142b', '#ffffff', dorsal[0], propio[0]], ['#cf142b', '#f5cc10', '#0c3b93', '#fff3c4', dorsal[1], opt.modo === 'ia' ? '' : propio[1]]]
       .map(u => { const o = { t: camisaT(u), b: brazoSupL([u[0], u[1], u[2]]) }; extra.push(o.t, o.b); return o; });
     const JX = -0.42, JZ = 7.42, SUELTA = 0.2;
     const camisaM = std({ map: UNI[0].t, roughness: .84 });
@@ -458,7 +465,7 @@
       R.s0.textContent = st.pts[0]; R.s1.textContent = st.pts[1]; R.ronda.textContent = 'Ronda ' + st.ronda;
       R.l.classList.toggle('on', st.turno === 0 && !st.fin); R.r.classList.toggle('on', st.turno === 1 && !st.fin);
       const quedan = POR_RONDA - st.tiros[st.turno];
-      R.turno.textContent = st.fin ? '' : (esIA(st.turno) ? 'Lanza la máquina…' : (opt.modo === 'ia' ? 'Te toca lanzar' : 'Lanzan los ' + nombres[st.turno]));
+      R.turno.textContent = st.fin ? '' : (esIA(st.turno) ? 'Lanza la máquina…' : (opt.modo === 'ia' ? (propio[0] ? 'Te toca, ' + propio[0] : 'Te toca lanzar') : (conNombre(st.turno) ? 'Lanza ' : 'Lanzan los ') + nombres[st.turno]));
       R.turno.style.background = EQ[st.turno].c;
       R.rest.style.color = st.turno ? '#ff8f98' : '#8fb8ff';
       R.rest.innerHTML = st.fin ? '' : Array.from({ length: POR_RONDA }, (_, i) => `<i class="${i < quedan ? 'q' : ''}"></i>`).join('');
@@ -562,7 +569,7 @@
       if (opt.demo) return;
       const gano = opt.modo !== 'ia' || eq === 0;
       gano ? OJ.snd.gana() : OJ.snd.pierde();
-      OJ.app.final({ juego: 'tejo', gano: opt.modo === 'ia' ? eq === 0 : null, titulo: opt.modo === 'ia' ? (eq === 0 ? '¡Ganaste!' : 'Ganó la máquina') : '¡Ganaron los ' + nombres[eq] + '!',
+      OJ.app.final({ juego: 'tejo', gano: opt.modo === 'ia' ? eq === 0 : null, titulo: opt.modo === 'ia' ? (eq === 0 ? '¡Ganaste!' : 'Ganó la máquina') : (conNombre(eq) ? '¡Ganó ' : '¡Ganaron los ') + nombres[eq] + '!',
         marcador: [[nombres[0], st.pts[0]], [nombres[1], st.pts[1]]], opt });
     }
 
