@@ -4,8 +4,8 @@
 set -u
 cd "$(dirname "$0")/.."
 APPS=("$@")
-[ ${#APPS[@]} -eq 0 ] && APPS=(RadioOrbe OrbeTV OrbeSismos OrbeEspacio OrbeClima OrbePodcasts OrbeBiblia)
-declare -A NOMBRE=([RadioOrbe]=OrbeRadio [OrbeTV]=OrbeTV [OrbeSismos]=OrbeSismos [OrbeEspacio]=OrbeEspacio [OrbeClima]=OrbeClima [OrbePodcasts]=OrbePodcasts [OrbeBiblia]=OrbeBiblia)
+[ ${#APPS[@]} -eq 0 ] && APPS=(RadioOrbe OrbeTV OrbeSismos OrbeEspacio OrbeClima OrbePodcasts OrbeBiblia OrbeJuegos)
+declare -A NOMBRE=([RadioOrbe]=OrbeRadio [OrbeTV]=OrbeTV [OrbeSismos]=OrbeSismos [OrbeEspacio]=OrbeEspacio [OrbeClima]=OrbeClima [OrbePodcasts]=OrbePodcasts [OrbeBiblia]=OrbeBiblia [OrbeJuegos]=JuegosDeColombia)
 for a in "${APPS[@]}"; do
   [ -d "$a" ] || continue
   v=$(grep -o "versionName '[^']*'" "$a/app/build.gradle" | cut -d"'" -f2)

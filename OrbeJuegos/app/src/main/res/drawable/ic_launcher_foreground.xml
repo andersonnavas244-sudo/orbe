@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono monocromo (temas de Android 13+): tejo con chispas de la mecha y bola de billar. Lienzo 108x108. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- chispas de la mecha -->
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M41,44 L36,34 M47,42 L48,30 M53,44 L60,35 M35,48 L26,43 M56,49 L65,46" />
+    <!-- tejo (disco visto de lado) -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M24,58 a20,8 0 1,0 40,0 l0,7 a20,8 0 1,1 -40,0 z M24,58 a20,8 0 1,1 40,0 a20,8 0 1,1 -40,0 z" />
+    <!-- bola de billar -->
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3.2" android:fillColor="#00000000"
+        android:pathData="M77,55 a10,10 0 1,0 0.01,0 z" />
+</vector>

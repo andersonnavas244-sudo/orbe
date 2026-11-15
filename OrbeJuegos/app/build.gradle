@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.orbejuegos.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.orbejuegos.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Para publicar en Play Store, configura aquí tu propia firma (signingConfig).
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Anuncios (AdMob): solo intersticial entre partidas, con límite (sin banner: los controles del juego van abajo)
+    implementation 'com.google.android.gms:play-services-ads:24.9.0'
+    // Formulario de consentimiento (obligatorio para usuarios de la UE/Reino Unido)
+    implementation 'com.google.android.ump:user-messaging-platform:3.2.0'
+    // Suscripción mensual "Premium sin anuncios"
+    implementation 'com.android.billingclient:billing:7.1.1'
+}
