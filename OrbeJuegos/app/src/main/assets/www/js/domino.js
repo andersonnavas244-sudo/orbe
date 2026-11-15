@@ -101,7 +101,7 @@
     function elegirIA(j, jug, dif) {
       const e = v.extremos(), ops = [];
       jug.forEach(i => lados(manos[j][i]).forEach(l => ops.push({ i, l })));
-      if (dif === 0 && Math.random() < 0.6) return ops[Math.floor(Math.random() * ops.length)];
+      if (Math.random() < [0.6, 0.18, 0.05][dif]) return ops[Math.floor(Math.random() * ops.length)];      // a veces juega por instinto
       let mejor = ops[0], ms = -1e9;
       ops.forEach(o => {
         const f = manos[j][o.i], doble = f[0] === f[1]; let sc = pips(f) + (doble ? 5 : 0);
@@ -116,7 +116,7 @@
             const comp = manos[(j + 2) % 4]; if (comp && comp.length <= 2 && !comp.some(x => cabe(x, ext.izq) || cabe(x, ext.der))) sc -= 4;
           }
         }
-        sc += Math.random() * (dif === 0 ? 4 : 0.5);
+        sc += Math.random() * [4, 3, 1.5][dif];
         if (sc > ms) { ms = sc; mejor = o; }
       });
       return mejor;

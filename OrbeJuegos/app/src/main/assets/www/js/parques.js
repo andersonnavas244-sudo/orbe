@@ -101,8 +101,8 @@
       return { sc, R: a.R };
     }
     function elegirIA(j, l, dif) {
-      if (dif === 0 && Math.random() < 0.4) return l[Math.floor(Math.random() * l.length)];
-      const ruido = [25, 8, 0][dif] || 0, dd = libres();
+      if (Math.random() < [0.45, 0.15, 0.04][dif]) return l[Math.floor(Math.random() * l.length)];      // a veces juega por instinto
+      const ruido = [32, 15, 6][dif] || 0, dd = libres();
       let mejor = l[0], ms = -1e9;
       l.forEach(op => {
         const r = puntaje(j, op, P); let sc = r.sc + Math.random() * ruido;

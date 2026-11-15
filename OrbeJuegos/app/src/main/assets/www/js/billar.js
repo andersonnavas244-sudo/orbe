@@ -96,7 +96,7 @@
   OJ.BillarFis = Fis;
 
   /* La máquina, en carambola: prueba tiros al azar en una copia de la mesa y se queda con el mejor */
-  const IA_N = [[10, 45, 170], [12, 45, 170]], IA_ERR = [[0.03, 0.01, 0.004], [0.012, 0.006, 0.003]], IA_POOL = [0.022, 0.009, 0.003];
+  const IA_N = [[10, 45, 170], [12, 45, 170]], IA_ERR = [[0.03, 0.01, 0.004], [0.012, 0.006, 0.003]], IA_POOL = [0.034, 0.016, 0.007], IA_FALLA = [0.22, 0.13, 0.06], IA_VARIA = [420, 260, 110];
   function candidato(fis, sim, cue, tres) {
     const c = fis.b[cue]; let ang;
     if (Math.random() < 0.72) {
@@ -708,7 +708,8 @@
         while (ia.n < ia.lista.length && performance.now() - t0 < 8) {
           const c = ia.lista[ia.n++]; sim.copiar(fis); sim.tirar(0, c.ang, vel(c.pot), c.lado, c.alto);
           const r = juzgar(sim.simular(4000)), sc = r.gana === st.turno ? 2000 : r.gana >= 0 ? -100 : r.falta ? 0 : r.sigue ? 1000 + (c.corte || 0) * 100 : 300;
-          if (sc > ia.sc) { ia.sc = sc; ia.mejor = c; }
+          const sv = sc + Math.random() * IA_VARIA[opt.dif];      // no escoge siempre el mismo tiro
+          if (sv > ia.sc) { ia.sc = sv; ia.mejor = c; }
         }
         if (ia.n < ia.lista.length && !yaBasta()) return;
       } else {
@@ -716,7 +717,11 @@
         if (ia.n < ia.max && !yaBasta()) return;
       }
       const m = Object.assign({}, ia.mejor || { ang: st.ang, pot: 0.5, lado: 0, alto: 0 });
-      m.ang += OJ.gauss() * (pool ? (st.saque ? 0.004 : IA_POOL[opt.dif]) : IA_ERR[tres ? 1 : 0][opt.dif]);
+      // si va muy adelante se relaja; de vez en cuando falla feo, como cualquier persona
+      const ventaja = pool ? (b9 ? 0 : metidasDe(1) - metidasDe(0)) / 2 : st.pts[1] - st.pts[0], k = ventaja >= 2 ? 1.35 : ventaja <= -2 ? 0.9 : 1;
+      const mal = !st.saque && Math.random() < IA_FALLA[opt.dif] ? 3.2 : 1;
+      m.ang += OJ.gauss() * k * mal * (pool ? (st.saque ? 0.004 : IA_POOL[opt.dif]) : IA_ERR[tres ? 1 : 0][opt.dif]);
+      m.pot = clamp(m.pot * (1 + OJ.gauss() * 0.05 * k), 0.12, 1);
       st.lado = m.lado; st.alto = m.alto; ia.obj = m; ia.t = 0; ia.a0 = st.ang;
       let d = (m.ang - st.ang) % 6.2832; if (d > Math.PI) d -= 6.2832; if (d < -Math.PI) d += 6.2832; ia.da = d;
       st.fase = 'iaApunta'; pintar();

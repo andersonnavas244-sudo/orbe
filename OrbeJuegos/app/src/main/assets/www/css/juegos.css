@@ -342,3 +342,15 @@ button{font-family:inherit;color:inherit;border:none;background:none;padding:0;c
 .dm-tu .btn{width:auto;height:36px;margin:0;padding:0 18px;font-size:17px;background:#1d1230;color:#fff;box-shadow:none;order:2}
 .dm-tu .reloj{background:#7a3b00;left:14px;right:14px;bottom:3px}
 .dm-ab{position:absolute;left:0;right:0;bottom:0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(5,14,10,0),rgba(5,14,10,.7) 45%)}
+
+/* ---- pulido: respuesta al toque, sombras y profundidad ---- */
+.ic,.fino,.vista,.seg button,.home-bot button,.camiseta input,.btn{transition:transform .12s ease,background-color .2s,border-color .2s,box-shadow .2s}
+.ic:active,.fino:active,.vista:active,.seg button:active,.home-bot button:active{transform:scale(.94)}
+.seg button.on{box-shadow:0 0 0 3px rgba(255,201,60,.18),0 6px 16px rgba(0,0,0,.25)}
+.sheet{box-shadow:0 -14px 44px rgba(0,0,0,.5);background:linear-gradient(#241843,#1c1233 120px)}
+.velo.centro .sheet{box-shadow:0 18px 60px rgba(0,0,0,.6)}
+.card{box-shadow:0 12px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+.card-img{box-shadow:inset -12px 0 18px -10px rgba(0,0,0,.55)}
+#toast{box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.gran-t{letter-spacing:.5px;-webkit-text-stroke:1px rgba(0,0,0,.25)}
+.btn{background-image:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,0) 55%)}

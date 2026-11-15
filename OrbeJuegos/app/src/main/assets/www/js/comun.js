@@ -165,7 +165,7 @@
   OJ.setGame = function (g) {
     if (cur && cur.dispose) cur.dispose();
     cur = g; OJ.juego = g;
-    if (g) { R.toneMappingExposure = g.exposure || 1; resize(); }
+    if (g) { R.toneMappingExposure = g.exposure || 1; g.scene.traverse(o => { if (o.isLight && o.castShadow && o.shadow.radius < 1.8) o.shadow.radius = 1.8; }); resize(); }
   };
   /* Calidad automática: si el celular va lento, baja la resolución (y luego las sombras) para que no se trabe */
   let lento = 0;
