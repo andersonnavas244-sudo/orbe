@@ -50,8 +50,8 @@
     const fl = mesh(scene, new THREE.PlaneGeometry(40, 40), std({ map: tex(512, 512, planks('#6b4a35', '#57392a', 'rgba(0,0,0,.45)', 14), 7, 7), roughness: .9 }), V(0, 0, 0));
     fl.rotation.x = -Math.PI / 2;
     mesh(scene, new THREE.PlaneGeometry(18, 9), std({ map: tex(512, 512, planks('#5b4038', '#4a322b', 'rgba(0,0,0,.5)', 12), 3, 2), roughness: .95 }), V(0, 4.5, -2.7));
-    const sign = mesh(scene, new THREE.PlaneGeometry(3.6, 0.85), new THREE.MeshBasicMaterial({ map: OJ.signTex('Tejo Colombiano', '#a32424', '#ffd34d', '#fff3d6', '800 150px "Baloo 2", sans-serif') }), V(0, 2.62, -2.65), false);
-    sign.scale.setScalar(0.62);
+    const sign = mesh(scene, new THREE.PlaneGeometry(3.6, 0.85), new THREE.MeshBasicMaterial({ map: OJ.signTex('Tejo Colombiano', '#a32424', '#ffd34d', '#fff3d6', '800 150px "Baloo 2", sans-serif') }), V(0, 2.3, -2.65), false);
+    sign.scale.setScalar(0.56);
     OJ.guirnalda(scene, 3.45, -4.5, 4.5, -2.25, 0.35);
     OJ.guirnalda(scene, 4.0, -4.5, 4.5, 1.2, 0.4);
     scene.add(new THREE.HemisphereLight(0xc7b3ff, 0x3a2414, 0.42));
