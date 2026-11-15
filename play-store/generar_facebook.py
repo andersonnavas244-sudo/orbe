@@ -55,6 +55,11 @@ ADS = {
                chips=['El top de cada país', 'Noticias, humor y crimen real', 'Android Auto y Chromecast']),
         b=dict(h='Tu próximo podcast favorito', shots=['capturas/telefono-4-reproductor.png', 'capturas/telefono-2-explorar.png'],
                checks=['Explora por temas y países', 'Sigue donde quedaste', 'Temporizador para dormir'])),
+    'biblia': dict(
+        a=dict(h='Jesús sostiene el mundo', s='Y te regala un versículo para cada día', shot='capturas/telefono-1-hoy.png',
+               chips=['La Biblia completa sin internet', 'Oraciones y música para orar', 'Versículos para tus estados']),
+        b=dict(h='Empieza cada día con fe', shots=['capturas/telefono-2-versiculo.png', 'capturas/telefono-3-oraciones.png'],
+               checks=['Un versículo nuevo cada mañana', 'Padre Nuestro, Salmo 23 y 91', 'Planes para leer la Biblia en 1 año'])),
 }
 
 

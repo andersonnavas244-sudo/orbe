@@ -149,7 +149,7 @@ def music(style, total):
                 break
             bass[s0:s0 + len(seg)] += np.sin(2 * np.pi * fb * seg) * np.exp(-seg * (2.2 if st['beat'] == 'pop' else 0.5)) * np.minimum(1, seg / 0.01)
         # arpegio brillante (corcheas), alternando izquierda y derecha
-        if st['beat'] in ('pop', 'suave'):
+        if st['beat'] in ('pop', 'suave', 'calma'):
             notes = [f0 * 4 * 2 ** (iv / 12) for iv in INTERVALS[typ]]
             step = beat / 2
             for j in range(16):
@@ -205,6 +205,8 @@ def music(style, total):
                 seg = np.arange(int(0.03 * SR)) / SR
                 tick = rng.standard_normal(len(seg)) * np.exp(-seg * 120)
                 hats[s1:s1 + len(seg)] += tick[:max(0, n - s1)] * (0.35 if q == 0 else 0.15)
+        elif st['beat'] == 'calma':   # música para orar: sin percusión
+            pass
         else:   # suave: solo un shaker
             for half in (0, 0.5):
                 s1 = int((t0 + half * beat) * SR)

@@ -1,0 +1,283 @@
+package com.orbebiblia.app;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.graphics.Color;
+import android.graphics.Insets;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.view.WindowInsets;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Pantalla principal de Orbe Biblia: WebView (assets/www) con el versículo del día sobre el globo 3D,
+ * la Biblia completa sin internet y el puente "AndroidBiblia" hacia lo nativo: versículo diario,
+ * lectura en voz alta, compartir imagen, anuncios y Premium.
+ */
+public class MainActivity extends Activity {
+
+    private static final String ASSET_HOST = "appassets.androidplatform.net";
+    private static final String START_URL = "https://" + ASSET_HOST + "/www/index.html";
+    private static final int REQ_NOTIF = 12;
+
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private final ExecutorService io = Executors.newFixedThreadPool(4);
+    private WebView web;
+    private AdsManager ads;
+    private BillingManager billing;
+    private boolean pageReady;
+    private String pendingOpen;
+    private Speech speech;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.rgb(3, 5, 12));
+        web = new WebView(this);
+        web.setBackgroundColor(Color.rgb(3, 5, 12));
+        root.addView(web, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        FrameLayout bannerBox = new FrameLayout(this);
+        bannerBox.setVisibility(View.GONE);
+        root.addView(bannerBox, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        setContentView(root);
+        root.setOnApplyWindowInsetsListener((View v, WindowInsets insets) -> {
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets i = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                v.setPadding(i.left, i.top, i.right, i.bottom);
+            } else {
+                v.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
+                        insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
+            }
+            return insets;
+        });
+        getWindow().setStatusBarColor(Color.rgb(3, 5, 12));
+        getWindow().setNavigationBarColor(Color.rgb(3, 5, 12));
+
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(false);
+        s.setTextZoom(100);
+        web.setWebChromeClient(new WebChromeClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                if (ASSET_HOST.equals(uri.getHost())) return serveAsset(uri.getPath());
+                return null;
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                if (ASSET_HOST.equals(uri.getHost())) return false;
+                openExternal(uri);
+                return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
+                if (pendingOpen != null) {
+                    String o = pendingOpen; pendingOpen = null;
+                    main.postDelayed(() -> js("window.orbeOpen && orbeOpen(" + JSONObject.quote(o) + ")"), 2500);
+                }
+            }
+        });
+        web.addJavascriptInterface(new Bridge(), "AndroidBiblia");
+        web.loadUrl(START_URL);
+
+        ads = new AdsManager(this, bannerBox);
+        ads.start();
+        billing = new BillingManager(this, new BillingManager.Callback() {
+            @Override public void onPremium(boolean premium, String price) {
+                runOnUiThread(() -> {
+                    if (premium) ads.disable();
+                    js("window.onNativePremium && onNativePremium(" + premium + "," + JSONObject.quote(price == null ? "" : price) + ")");
+                });
+            }
+            @Override public void onMessage(String msg) { js("window.orbeToast && orbeToast(" + JSONObject.quote(msg) + ")"); }
+        });
+        billing.start();
+
+        DailyVerse.ensureChannel(this);
+        DailyVerse.schedule(this);
+        speech = new Speech(this, ev -> js("window.onNativeSpeech && onNativeSpeech(" + JSONObject.quote(ev) + ")"));
+        if (DailyVerse.enabled(this)) askNotifications();
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    /** Si se abrió desde el versículo del día, muestra esa pantalla. */
+    private void handleIntent(Intent i) {
+        String o = i == null ? null : i.getStringExtra("open");
+        if (o == null) return;
+        if (pageReady) js("window.orbeOpen && orbeOpen(" + JSONObject.quote(o) + ")");
+        else pendingOpen = o;
+    }
+
+    private void js(String code) {
+        runOnUiThread(() -> {
+            if (web == null) return;
+            if (!pageReady) { main.postDelayed(() -> js(code), 400); return; }
+            web.evaluateJavascript(code, null);
+        });
+    }
+
+    private void openExternal(Uri uri) {
+        try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) { }
+    }
+
+    private WebResourceResponse serveAsset(String path) {
+        if (path == null || path.equals("/")) path = "/www/index.html";
+        String assetPath = path.startsWith("/") ? path.substring(1) : path;
+        try {
+            InputStream in = getAssets().open(assetPath, AssetManager.ACCESS_STREAMING);
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Cache-Control", "no-cache");
+            String l = assetPath.toLowerCase();
+            String mime = l.endsWith(".html") ? "text/html" : l.endsWith(".js") ? "application/javascript" : l.endsWith(".css") ? "text/css"
+                    : l.endsWith(".json") || l.endsWith(".geojson") ? "application/json" : l.endsWith(".png") ? "image/png"
+                    : l.endsWith(".jpg") ? "image/jpeg" : l.endsWith(".woff2") ? "font/woff2" : l.endsWith(".svg") ? "image/svg+xml"
+                    : l.endsWith(".webp") ? "image/webp" : l.endsWith(".m4a") ? "audio/mp4" : "application/octet-stream";
+            String enc = mime.startsWith("text/") || mime.contains("json") || mime.contains("javascript") ? "utf-8" : null;
+            return new WebResourceResponse(mime, enc, 200, "OK", headers, in);
+        } catch (IOException e) {
+            return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", new HashMap<>(), null);
+        }
+    }
+
+    private void askNotifications() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
+        }
+    }
+
+    /** Métodos llamados desde JavaScript (window.AndroidBiblia). */
+    private class Bridge {
+        /** Versículo del día: activado, hora y minuto. */
+        @JavascriptInterface
+        public void setDaily(boolean on, int h, int m) {
+            DailyVerse.set(MainActivity.this, on, h, m);
+            if (on) runOnUiThread(MainActivity.this::askNotifications);
+        }
+
+        @JavascriptInterface
+        public String getDaily() {
+            return "{\"on\":" + DailyVerse.enabled(MainActivity.this) + ",\"h\":" + DailyVerse.hour(MainActivity.this)
+                    + ",\"m\":" + DailyVerse.minute(MainActivity.this) + "}";
+        }
+
+        /** Muestra ya la notificación del versículo (para probarla). */
+        @JavascriptInterface public void testDaily() { runOnUiThread(MainActivity.this::askNotifications); DailyVerse.show(MainActivity.this); }
+
+        /** Lectura en voz alta. */
+        @JavascriptInterface public void speak(String text, float rate) { speech.setRate(rate); speech.speak(text); }
+        @JavascriptInterface public void stopSpeak() { speech.stop(); }
+
+        @JavascriptInterface
+        public void share(String text) {
+            runOnUiThread(() -> {
+                Intent send = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+                for (String pkg : new String[]{"com.whatsapp", "com.whatsapp.w4b"}) {
+                    try { startActivity(new Intent(send).setPackage(pkg)); return; } catch (ActivityNotFoundException ignored) { }
+                }
+                startActivity(Intent.createChooser(send, "Compartir"));
+            });
+        }
+
+        /** Comparte una tarjeta (PNG en base64) por WhatsApp u otra app. */
+        @JavascriptInterface
+        public void shareImage(String base64Png, String text) {
+            io.execute(() -> {
+                try {
+                    java.io.File dir = new java.io.File(getCacheDir(), "compartir");
+                    dir.mkdirs();
+                    java.io.File f = new java.io.File(dir, "versiculo.png");
+                    try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+                        out.write(android.util.Base64.decode(base64Png, android.util.Base64.DEFAULT));
+                    }
+                    Uri uri = androidx.core.content.FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".archivos", f);
+                    runOnUiThread(() -> {
+                        Intent send = new Intent(Intent.ACTION_SEND).setType("image/png")
+                                .putExtra(Intent.EXTRA_STREAM, uri).putExtra(Intent.EXTRA_TEXT, text)
+                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        for (String pkg : new String[]{"com.whatsapp", "com.whatsapp.w4b"}) {
+                            try { startActivity(new Intent(send).setPackage(pkg)); return; } catch (ActivityNotFoundException ignored) { }
+                        }
+                        startActivity(Intent.createChooser(send, "Compartir"));
+                    });
+                } catch (Exception e) {
+                    js("window.orbeToast && orbeToast('No se pudo compartir la imagen')");
+                }
+            });
+        }
+
+        @JavascriptInterface public void openUrl(String url) { runOnUiThread(() -> openExternal(Uri.parse(url))); }
+
+        /** Abre un enlace externo: puede mostrar un anuncio antes. */
+        @JavascriptInterface
+        public void openLink(String url) { runOnUiThread(() -> ads.showInterstitialThen(() -> openExternal(Uri.parse(url)))); }
+
+        /** Pausa publicitaria (respeta el límite de 2 cada 40 minutos; nunca en avisos). */
+        @JavascriptInterface
+        public void adBreak() { runOnUiThread(() -> { if (ads.canShow()) ads.showInterstitialThen(() -> { }); }); }
+
+        @JavascriptInterface public void buyPremium() { runOnUiThread(() -> billing.buy()); }
+        @JavascriptInterface public void manageSubscription() { runOnUiThread(() -> openExternal(Uri.parse(billing.manageUrl()))); }
+        @JavascriptInterface public boolean isPremium() { return StationStore.isPremium(MainActivity.this); }
+    }
+
+    @Override
+    public void onBackPressed() {
+        web.evaluateJavascript("window.orbeBack ? window.orbeBack() : false", value -> {
+            if (!"true".equals(value)) finish();
+        });
+    }
+
+    @Override protected void onResume() { super.onResume(); web.onResume(); ads.onResume(); }
+    @Override protected void onPause() { web.onPause(); ads.onPause(); super.onPause(); }
+
+    @Override
+    protected void onDestroy() {
+        ads.onDestroy();
+        if (speech != null) speech.shutdown();
+        billing.end();
+        io.shutdown();
+        if (web != null) { web.destroy(); web = null; }
+        super.onDestroy();
+    }
+}

@@ -10,6 +10,7 @@ Apps Android (teléfono, tableta y Android TV) con un globo terráqueo 3D:
 | [`OrbeEspacio/`](OrbeEspacio/README.md) | **Orbe Espacio** | La Estación Espacial y +14.000 satélites en vivo, pasos, lanzamientos |
 | [`OrbeClima/`](OrbeClima/README.md) | **Orbe Clima** | Viento, lluvia, humedad y huracanes en 3D, pronóstico y alertas |
 | [`OrbePodcasts/`](OrbePodcasts/README.md) | **Orbe Podcasts** | Los podcasts más escuchados de 63 países, con reproductor completo |
+| [`OrbeBiblia/`](OrbeBiblia/README.md) | **Orbe Biblia** | La Biblia completa sin internet, versículo del día y Jesús sosteniendo el mundo en 3D |
 | [`politicas/`](politicas/) | Políticas de privacidad | Enlaces que pide Google Play |
 | [`play-store/`](play-store/) | Fichas de Play Store | Textos, iconos, imágenes destacadas, banners de TV y capturas |
 
@@ -34,6 +35,7 @@ Pon cada dirección en `CatalogUpdater.CATALOG_URL` (Radio y TV), en `MIRROR` de
 - Orbe Espacio: `https://github.com/andersonnavas244-sudo/orbe/blob/main/politicas/privacidad-orbe-espacio.md`
 - Orbe Clima: `https://github.com/andersonnavas244-sudo/orbe/blob/main/politicas/privacidad-orbe-clima.md`
 - Orbe Podcasts: `https://github.com/andersonnavas244-sudo/orbe/blob/main/politicas/privacidad-orbe-podcasts.md`
+- Orbe Biblia: `https://github.com/andersonnavas244-sudo/orbe/blob/main/politicas/privacidad-orbe-biblia.md`
 
 Correo de contacto de las apps: lauandertechnologies@gmail.com
 

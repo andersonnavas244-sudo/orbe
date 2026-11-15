@@ -20,7 +20,8 @@ import generar_graficos as gg
 
 ROOT = gg.ROOT
 DENS = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
-PROJ = {'radio': 'RadioOrbe', 'tv': 'OrbeTV', 'sismos': 'OrbeSismos', 'espacio': 'OrbeEspacio', 'clima': 'OrbeClima', 'podcasts': 'OrbePodcasts'}
+PROJ = {'radio': 'RadioOrbe', 'tv': 'OrbeTV', 'sismos': 'OrbeSismos', 'espacio': 'OrbeEspacio', 'clima': 'OrbeClima', 'podcasts': 'OrbePodcasts', 'biblia': 'OrbeBiblia'}
+BIBLIA_APP = {'www': os.path.join(ROOT, 'OrbeBiblia', 'app', 'src', 'main', 'assets', 'www'), 'title': 'Orbe Biblia'}
 PODCASTS_APP = {'www': os.path.join(ROOT, 'OrbePodcasts', 'app', 'src', 'main', 'assets', 'www'), 'title': 'Orbe Podcasts'}
 CLIMA_APP = {'www': os.path.join(ROOT, 'OrbeClima', 'app', 'src', 'main', 'assets', 'www'), 'title': 'Orbe Clima'}
 ESPACIO_APP = {'www': os.path.join(ROOT, 'OrbeEspacio', 'app', 'src', 'main', 'assets', 'www'), 'title': 'Orbe Espacio'}
@@ -150,6 +151,47 @@ def mic_layer(W, cx, cy, h):
     return L
 
 
+def book_layer(W, cx, cy, bw):
+    """Biblia abierta: tapa granate, hojas color marfil con el borde dorado y líneas de texto."""
+    L = Image.new('RGBA', (W, W), (0, 0, 0, 0))
+    d = ImageDraw.Draw(L)
+    h = bw * 0.46
+
+    def page(side, dy=0.0, shrink=0.0):
+        sx = -1 if side == 'l' else 1
+        out = cx + sx * (bw / 2 - shrink)
+        top = [(cx, cy - h * 0.16 + dy)]
+        for t in (0.25, 0.5, 0.75, 1.0):
+            x = cx + sx * (bw / 2 - shrink) * t
+            y = cy - h * 0.16 - h * 0.30 * np.sin(t * np.pi * 0.8) + dy
+            top.append((x, y))
+        bottom = [(out, cy + h * 0.52 + dy)]
+        for t in (0.75, 0.5, 0.25, 0.0):
+            x = cx + sx * (bw / 2 - shrink) * t
+            y = cy + h * 0.66 - h * 0.18 * np.sin(t * np.pi * 0.8) + dy
+            bottom.append((x, y))
+        return top + bottom
+
+    m = bw * 0.035
+    d.polygon(page('l', h * 0.08, -m), fill=(122, 30, 34, 255))
+    d.polygon(page('r', h * 0.08, -m), fill=(122, 30, 34, 255))
+    for i in range(6, 0, -1):
+        c = (236 - i * 9, 214 - i * 9, 170 - i * 10, 255)
+        d.polygon(page('l', i * h * 0.012), fill=c)
+        d.polygon(page('r', i * h * 0.012), fill=c)
+    d.polygon(page('l'), fill=(255, 247, 228, 255), outline=(232, 186, 92, 255))
+    d.polygon(page('r'), fill=(255, 247, 228, 255), outline=(232, 186, 92, 255))
+    for side in (-1, 1):
+        for j in range(6):
+            t0, t1 = 0.16, 0.86
+            y = cy - h * 0.02 + j * h * 0.095
+            xa, xb = cx + side * bw * 0.5 * t0, cx + side * bw * 0.5 * t1
+            curve = -h * 0.06
+            d.line((xa, y + curve * 0.3, xb, y + curve), fill=(150, 120, 80, 150), width=max(1, int(bw * 0.012)))
+    d.line((cx, cy - h * 0.16, cx, cy + h * 0.66), fill=(170, 130, 70, 255), width=max(1, int(bw * 0.012)))
+    return L
+
+
 def render_layers(key, app, size):
     """Devuelve (fondo RGB, primer plano RGBA) de size x size (lienzo de 108 dp)."""
     S = 2
@@ -193,6 +235,26 @@ def render_layers(key, app, size):
         fg = gg.glow_layer(fg, waves, 2.2 * k, glow=0.3)
         mic = mic_layer(W, mx, my, mh)
         ia = np.asarray(mic, np.float32)
+        a = ia[..., 3:4] / 255.0
+        fg = fg * (1 - a) + ia[..., :3] * a
+        shape_mask = ia[..., 3] > 8
+    elif key == 'biblia':
+        # La Tierra al amanecer y una Biblia abierta delante, con rayos de luz dorada
+        ecx, ecy = cx, int(H * 0.40)
+        R = int(W * 0.22)
+        fg, view = sober_earth(fg, xx, yy, app, ecx, ecy, R)
+        bx, by, bw = cx, int(H * 0.645), W * 0.44
+        rr = np.sqrt((xx - bx) ** 2 + (yy - (by - bw * 0.1)) ** 2)
+        glow = np.clip(1 - rr / (W * 0.36), 0, 1) ** 2
+        fg = np.clip(fg + glow[..., None] * np.array([255, 196, 110.]) * 0.6, 0, 255)
+
+        def rays(d):
+            for a in range(-155, -20, 15):
+                ang = np.radians(a)
+                d.line((bx, by - bw * 0.08, bx + np.cos(ang) * W * 0.30, by - bw * 0.08 + np.sin(ang) * W * 0.30), fill=(190, 150, 90), width=max(1, int(1.3 * k)))
+        fg = gg.glow_layer(fg, rays, 4.0 * k, glow=0.12)
+        book = book_layer(W, bx, by, bw)
+        ia = np.asarray(book, np.float32)
         a = ia[..., 3:4] / 255.0
         fg = fg * (1 - a) + ia[..., :3] * a
         shape_mask = ia[..., 3] > 8
@@ -315,7 +377,7 @@ def render_layers(key, app, size):
     alpha = np.clip(lum / 30.0, 0, 1) * 255
     if key == 'tv':
         alpha = np.maximum(alpha, (shape_mask | inner) * 255)
-    if key in ('espacio', 'podcasts'):
+    if key in ('espacio', 'podcasts', 'biblia'):
         alpha = np.maximum(alpha, shape_mask * 255)
     fg_img = Image.fromarray(np.dstack([np.clip(fg, 0, 255), alpha]).astype(np.uint8), 'RGBA')
     bg_img = Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8))
@@ -342,7 +404,7 @@ def masked_preview(bg, fg, shape):
 
 if __name__ == '__main__':
     import sys
-    apps = dict(gg.APPS, sismos=SISMOS_APP, espacio=ESPACIO_APP, clima=CLIMA_APP, podcasts=PODCASTS_APP)
+    apps = dict(gg.APPS, sismos=SISMOS_APP, espacio=ESPACIO_APP, clima=CLIMA_APP, podcasts=PODCASTS_APP, biblia=BIBLIA_APP)
     only = sys.argv[1:]          # p. ej.: python generar_iconos_app.py sismos
     for key, app in apps.items():
         if only and key not in only:

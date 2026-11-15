@@ -11,6 +11,8 @@ MUSICA = {
     'alegre': dict(bpm=108, chords=[(3, 'M'), (-2, 'M'), (0, 'm'), (-4, 'M')], beat='pop'),
     'espacio': dict(bpm=72, chords=[(-7, 'm9'), (-4, 'M7'), (-2, 'M9'), (-9, 'm7')], beat='suave'),
     'aire': dict(bpm=96, chords=[(-5, 'm'), (-9, 'M'), (-2, 'M'), (-7, 'M')], beat='pop'),
+    'oracion': dict(bpm=56, chords=[(-7, 'M9'), (-2, 'M7'), (-4, 'M9'), (-9, 'm7'), (-7, 'M9'), (-5, 'M7'), (-2, 'M9'), (-7, 'M7')], beat='calma'),
+    'biblia': dict(bpm=64, chords=[(-7, 'M9'), (-2, 'M7'), (-4, 'M9'), (-9, 'm7')], beat='suave'),
 }
 
 APPS = {
@@ -142,5 +144,26 @@ APPS = {
                  n='La app recuerda dónde ibas en cada episodio, para que sigas escuchando justo donde lo dejaste.'),
             dict(img=None, tag='DESCARGA GRATIS', t='Orbe Podcasts', s='Escucha lo que el mundo está escuchando.', cta=True,
                  n='Orbe Podcasts. Escucha lo que el mundo está escuchando. Descárgala gratis en Google Play.'),
+        ]),
+    'biblia': dict(
+        title='Orbe Biblia', folder='OrbeBiblia', voz='Laura', musica='biblia', color=(245, 194, 107),
+        slogan='Un versículo para cada día.',
+        escenas=[
+            dict(img=None, tag='CADA MAÑANA', t='Empieza el día con fe', s='la Palabra de Dios en tu celular',
+                 n='¿Buscas paz para empezar el día? Lleva la Palabra de Dios contigo, siempre, aunque no tengas internet.'),
+            dict(img='capturas/telefono-1-hoy.png', tag='EN 3D', t='Jesús sostiene el mundo', s='y te regala un versículo cada día',
+                 n='Orbe Biblia te recibe con Jesús sosteniendo el mundo en su mano, y un versículo nuevo para cada día del año.'),
+            dict(img='capturas/telefono-2-versiculo.png', tag='COMPARTE', t='Un versículo para cada día', s='en imágenes para tus estados',
+                 n='Compártelo en tus estados de WhatsApp con una imagen hermosa, y bendice a tu familia y a tus amigos.'),
+            dict(img='capturas/telefono-3-oraciones.png', tag='ORA', t='Oraciones de la Biblia', s='Padre Nuestro, Salmo 23, Salmo 91',
+                 n='Ora con el Padre Nuestro, el Salmo veintitrés o el Salmo noventa y uno, y escúchalos en voz alta con música suave.'),
+            dict(img='capturas/telefono-4-lectura.png', tag='SIN INTERNET', t='La Biblia completa', s='Reina-Valera 1909, los 66 libros',
+                 n='Lee la Biblia completa, los sesenta y seis libros, con letra grande, lectura de noche, resaltados y favoritos.'),
+            dict(img='capturas/telefono-5-buscar.png', tag='BUSCA', t='Encuentra cualquier versículo', s='en los 31.102 versículos',
+                 n='Busca cualquier palabra, y encuentra al instante ese versículo que necesitas.'),
+            dict(img='capturas/telefono-6-planes.png', tag='PLANES', t='Lee la Biblia en un año', s='paso a paso, cada día',
+                 n='Y con los planes de lectura, lee toda la Biblia en un año, un poco cada día.'),
+            dict(img=None, tag='DESCARGA GRATIS', t='Orbe Biblia', s='Un versículo para cada día.', cta=True,
+                 n='Orbe Biblia. La Palabra de Dios, cada día contigo. Descárgala gratis en Google Play.'),
         ]),
 }

@@ -89,6 +89,19 @@ pon **Instalar ahora** como botón. Los textos de abajo ya tienen el largo corre
 - **Descripción:** Top de 63 países, gratis
 - **Público sugerido:** Latinoamérica y España · 18 a 45 años · intereses: podcasts, Spotify, true crime, historia, emprendimiento.
 
+## Orbe Biblia
+
+**Texto principal (versión 1):**
+> ✨ Jesús sostiene el mundo… y cada mañana te regala un versículo. La Biblia completa sin internet, con oraciones y música para orar. Gratis.
+
+**Texto principal (versión 2):**
+> 🙏 Empieza cada día con fe: un versículo nuevo cada mañana para compartir en tus estados, el Padre Nuestro, los Salmos 23 y 91, y planes para leer la Biblia en un año.
+
+- **Título:** La Biblia completa, gratis
+- **Descripción:** Un versículo para cada día
+- **Público sugerido:** Latinoamérica y latinos en EE. UU. · 18 a 65+ años · intereses: Biblia, cristianismo, iglesia, oración, música cristiana.
+- **Nota:** la imagen es el «Salvator Mundi» de Leonardo da Vinci (dominio público).
+
 ---
 
 ## Consejos para que rindan más
