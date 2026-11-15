@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// Firma propia para Play Store: los datos se leen de un archivo FUERA del repositorio
+// (por defecto ~/orbe-firma/firma.properties, o la ruta de la variable ORBE_FIRMA). Es la misma llave de todas las apps Orbe.
+// Si no existe, el release se firma con la llave de depuración (solo para probar).
+def firmaArchivo = file(System.getenv('ORBE_FIRMA') ?: (System.getProperty('user.home') + '/orbe-firma/firma.properties'))
+def firma = new Properties()
+if (firmaArchivo.exists()) firmaArchivo.withInputStream { firma.load(it) }
+def conFirmaPropia = firma.getProperty('storeFile') && firma.getProperty('storePassword') && firma.getProperty('keyAlias') && firma.getProperty('keyPassword')
+
 android {
     namespace 'com.orbepodcasts.app'
     compileSdk 35
@@ -14,11 +22,22 @@ android {
         versionName '1.0'
     }
 
+    signingConfigs {
+        if (conFirmaPropia) {
+            release {
+                storeFile file(firma.getProperty('storeFile'))
+                storePassword firma.getProperty('storePassword')
+                keyAlias firma.getProperty('keyAlias')
+                keyPassword firma.getProperty('keyPassword')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-            // Para publicar en Play Store, configura aquí tu propia firma (signingConfig).
-            signingConfig signingConfigs.debug
+            // Con ~/orbe-firma/firma.properties firma con la llave propia; si no, con la de depuración.
+            signingConfig conFirmaPropia ? signingConfigs.release : signingConfigs.debug
         }
     }
 
