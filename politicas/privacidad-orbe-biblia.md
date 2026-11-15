@@ -7,7 +7,7 @@ de lectura. Esta política explica qué datos se usan y por qué.
 
 ## 1. Datos que se guardan solo en tu teléfono
 
-Tus favoritos, los versículos que resaltas, tu diario de oración, tu racha de días, tus resultados de la trivia, tu
+Tus favoritos, los versículos que resaltas, tus notas, tu diario de oración, tu racha de días, tus resultados de la trivia, tu
 avance en los planes de lectura, el último capítulo que leíste, tus ajustes (tamaño de letra, tema de lectura, hora del versículo diario) y si tienes Premium. **No salen de tu
 teléfono** y se borran al desinstalar la app. No pedimos cuenta, nombre ni correo.
 
@@ -44,7 +44,7 @@ La suscripción Premium se paga con Google Play; no vemos tu tarjeta ni tus dato
 
 ## 8. Permisos
 
-- **Notificaciones:** el versículo del día.
+- **Notificaciones:** el versículo del día y la oración de la mañana y de la noche.
 - **Inicio del teléfono:** volver a programar el versículo del día después de reiniciar.
 - **Internet:** solo para los anuncios y la suscripción Premium.
 

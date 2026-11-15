@@ -17,6 +17,12 @@ oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
   Dios» (imagen lista para WhatsApp), 12 tarjetas para fechas con 8 fondos dibujados en la app, oración de la mañana
   y de la noche con aviso (`PrayerReminder.java`), trivia diaria (90 preguntas, 5 por día), lugares de la Biblia en
   el globo 3D con las rutas de Abraham, el Éxodo y Pablo, racha de días con insignias y diario de oración.
+- **Más para cada día:** devocional diario (versículo + 48 reflexiones originales por tema + oración), fechas
+  especiales automáticas (Navidad, Año Nuevo y cada día de Semana Santa, con la Pascua calculada cada año; para probar:
+  `index.html?fecha=2026-12-24`), versículo para memorizar cada semana con juego de 3 niveles, 7 planes por tema y
+  notas personales en cualquier versículo (contenido en `tools/contenido_devocional.py`).
+- **Widget** de la pantalla de inicio con el versículo del día (`VersiculoWidget.java`, `res/layout/widget_versiculo.xml`).
+- **Icono:** la imagen de Jesús con la Tierra (`tools/hacer_icono.py`).
 - **Versiones:** Reina-Valera 1909 y King James Version (inglés, `www/data/kjv/`).
 - **Buscar:** cualquier palabra o frase en los 31.102 versículos (sin tildes ni mayúsculas).
 - **Planes:** la Biblia en 1 año, el Nuevo Testamento en 90 días, y Salmos y Proverbios en 31 días.

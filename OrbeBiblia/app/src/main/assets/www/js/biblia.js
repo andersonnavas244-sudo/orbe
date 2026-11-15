@@ -27,6 +27,7 @@
     font: '<path d="M4 19 9.5 5h1L16 19M6.3 14h7.4M17 19l2.5-6.5L22 19M18 17h3"/>',
     music: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.6"/><circle cx="17.5" cy="16" r="2.6"/>',
     moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+    note: '<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 7.5l3 3"/>',
     copy: '<rect x="8" y="8" width="13" height="13" rx="2.5"/><path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3h-8A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8"/>'
   };
   const svg = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICO[n] || ''}</svg>`;
@@ -184,7 +185,7 @@
           p.y -= p.s; p.a += 0.01; p.x += Math.sin(p.a) * 0.15;
           if (p.y < -5) { p.y = H + 5; p.x = Math.random() * W; }
           ctx.globalAlpha = 0.35 + 0.35 * Math.sin(p.a * 2);
-          ctx.fillStyle = '#ffd98e'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+          ctx.fillStyle = window.__dustColor || '#ffd98e'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (window.__dustSize || 1), 0, 6.283); ctx.fill();
         }
       }
       requestAnimationFrame(step);
@@ -294,13 +295,14 @@
     body.innerHTML = '<div class="spinner"></div>';
     const data = await loadBook(code);
     if (!state.reader || state.reader.code !== code || state.reader.c !== c) return;
-    const hl = highlights(), f = favs();
+    const hl = highlights(), f = favs(), notas = store.get('notas', {});
     body.innerHTML = `<h2>${esc(readName(code))} ${c}</h2>${isKJV() ? '<span class="orn">King James Version</span>' : '<span class="orn">✦ ✦ ✦</span>'}` + data[c - 1].map((t, i) => {
       const k = keyOf(code, c, i + 1);
       const cls = `v${hl[k] ? ' hl-' + hl[k] : ''}${f[k] ? ' fav' : ''}`;
       // primera letra del capítulo grande y dorada, como en las Biblias impresas
-      if (i === 0 && t) return `<p class="${cls}" data-v="1"><span class="cap">${esc(t[0])}</span>${esc(t.slice(1))}</p>`;
-      return `<p class="${cls}" data-v="${i + 1}"><sup>${i + 1}</sup>${esc(t)}</p>`;
+      const nt = notas[k] ? `<div class="nota-v" data-nota="${k}">${svg('note')}<span>${esc(notas[k].t)}</span></div>` : '';
+      if (i === 0 && t) return `<p class="${cls}" data-v="1"><span class="cap">${esc(t[0])}</span>${esc(t.slice(1))}</p>${nt}`;
+      return `<p class="${cls}" data-v="${i + 1}"><sup>${i + 1}</sup>${esc(t)}</p>${nt}`;
     }).join('');
     body.scrollTop = 0;
     if (v) { const el = body.querySelector(`[data-v="${v}"]`); if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); } }
@@ -328,6 +330,14 @@
     const texts = vs.map(v => verseText(v));
     const ref = `${readName(r.code)} ${r.c}:${vs.length > 1 ? `${vs[0]}-${vs[vs.length - 1]}` : vs[0]}`;
     return { ...r, vs, text: texts.join(' '), ref };
+  }
+  // Notas personales en cualquier versículo
+  function openNota(k, ref) {
+    const n = store.get('notas', {})[k];
+    openSheet(`✎ ${ref}`, n ? `Nota del ${new Date(n.d).toLocaleDateString('es')}` : 'Escribe lo que Dios te dice con este versículo',
+      `<textarea id="nota-text" class="nota-area" rows="6" maxlength="1500" placeholder="Mi nota…">${esc(n ? n.t : '')}</textarea>
+      <div class="prayer-acts"><button class="btn gold" data-act="nota-save" data-k="${k}" data-ref="${esc(ref)}">Guardar</button>${n ? `<button class="btn" data-act="nota-del" data-k="${k}">Borrar</button>` : ''}</div>`);
+    setTimeout(() => { const t = $('#nota-text'); if (t) t.focus(); }, 350);
   }
   // texto de un versículo del lector (sin el número)
   function verseText(v) {
@@ -495,7 +505,7 @@
     $('#v-planes').innerHTML = (p ? `<section class="block" style="margin-top:4px"><h3>Tu plan</h3>${planDayHtml(p)}</section>` : '')
       + `<section class="block"><h3>${p ? 'Otros planes' : 'Elige un plan de lectura'}</h3>`
       + Object.entries(PLANES).filter(([id]) => !p || p.id !== id).map(([id, x]) => `<button class="plan" data-plan="${id}"><span class="em">${x.em}</span><h4>${esc(x.n)}</h4><p>${esc(x.d)}</p></button>`).join('')
-      + '</section><p class="about">Marca cada día tu lectura: la app lleva la cuenta y te muestra qué te toca hoy.</p>';
+      + '</section>' + (window.OrbeExtras ? OrbeExtras.planesTema() : '') + '<p class="about">Marca cada día tu lectura: la app lleva la cuenta y te muestra qué te toca hoy.</p>';
   }
   function renderHoyPlan() {
     const p = planState();
@@ -585,6 +595,7 @@
         const n = +vv.dataset.v; state.sel.has(n) ? state.sel.delete(n) : state.sel.add(n);
         vv.classList.toggle('sel', state.sel.has(n)); updateSel(); return;
       }
+      const nv = t.closest('[data-nota]'); if (nv) { const n = store.get('notas', {})[nv.dataset.nota]; openNota(nv.dataset.nota, n ? n.ref : ''); return; }
       const hl = t.closest('[data-hl]'); if (hl) {
         const s = selectedVerses(); if (!s) return; const h = highlights();
         s.vs.forEach(v => { const k = keyOf(s.code, s.c, v); if (hl.dataset.hl) h[k] = hl.dataset.hl; else delete h[k];
@@ -619,6 +630,14 @@
         state.sel.clear(); document.querySelectorAll('#r-body .sel').forEach(x => x.classList.remove('sel')); updateSel();
       }
       else if (act === 's-share') { const s = selectedVerses(); if (s) shareImage(s.text, s.ref); }
+      else if (act === 's-note') { const s = selectedVerses(); if (s) openNota(keyOf(s.code, s.c, s.vs[0]), s.ref); }
+      else if (act === 'nota-save') {
+        const k = a.dataset.k, txt = $('#nota-text').value.trim(), n = store.get('notas', {});
+        if (txt) n[k] = { t: txt, ref: a.dataset.ref, d: Date.now() }; else delete n[k];
+        store.set('notas', n); closeSheet(); toast(txt ? '✎ Nota guardada' : 'Nota borrada');
+        if (state.reader) { const r = state.reader; state.sel.clear(); openReader(r.code, r.c, +k.split('.')[2]); }
+      }
+      else if (act === 'nota-del') { const n = store.get('notas', {}); delete n[a.dataset.k]; store.set('notas', n); closeSheet(); toast('Nota borrada'); if (state.reader) { const r = state.reader; openReader(r.code, r.c); } }
       else if (act === 's-copy') {
         const s = selectedVerses(); if (!s) return;
         const txt = `“${s.text}” ${s.ref} (RV1909)`;
@@ -692,7 +711,8 @@
   window.__orbeDebug = { state, openReader, selectTab, openTema, openOracion, search, shareImage, layoutHero, get globe() { return globe; } };
 
   // Funciones que usa js/extras.js (sentimientos, tarjetas, trivia, mapa, racha, diario…)
-  window.__B = { $, N, NATIVE, PLAY, store, esc, svg, ICO, toast, paintIcons, openSheet, closeSheet, loadBook, parseRef, refOf, keyOf, bookName,
+  window.__B = { $, N, NATIVE, PLAY, store, esc, svg, ICO, toast, paintIcons, openSheet, closeSheet, loadBook, parseRef, refOf, keyOf, bookName, renderPlanes,
+    todayVerse, dayOfYear,
     openReader, speak, stopSpeak, verseCard, isFav, toggleFav, loadImg, wrapLines, getJSON, selectTab, state,
     get globe() { return globe; }, get cuadro() { return cuadro; }, get heroBox() { return heroBox; }, sheetOpen };
   async function start() {

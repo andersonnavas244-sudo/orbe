@@ -44,6 +44,14 @@
 
         <!-- Versículo del día -->
         <receiver android:name=".DailyVerse" android:exported="false" />
+        <!-- Widget de la pantalla de inicio: versículo del día -->
+        <receiver android:name=".VersiculoWidget" android:exported="false" android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_versiculo_info" />
+        </receiver>
+
         <!-- Oración de la mañana y de la noche -->
         <receiver android:name=".PrayerReminder" android:exported="false" />
 

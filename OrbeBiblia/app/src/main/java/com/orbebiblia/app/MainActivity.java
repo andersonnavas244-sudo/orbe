@@ -131,6 +131,7 @@ public class MainActivity extends Activity {
         DailyVerse.ensureChannel(this);
         DailyVerse.schedule(this);
         PrayerReminder.scheduleAll(this);
+        try { VersiculoWidget.updateAll(this); } catch (Exception ignored) { }
         speech = new Speech(this, ev -> js("window.onNativeSpeech && onNativeSpeech(" + JSONObject.quote(ev) + ")"));
         if (DailyVerse.enabled(this)) askNotifications();
         handleIntent(getIntent());

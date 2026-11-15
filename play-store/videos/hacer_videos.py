@@ -267,14 +267,14 @@ def mix_audio(key, cfg, voices, starts):
         a = int(max(0, s - 0.3) * SR)
         w = whoosh(seed=int(s * 10))
         out[:, a:a + len(w)] += w[:max(0, n - a)]
-    if cfg.get('epico'):
+    if cfg.get('golpes'):
         for i, s in enumerate(starts[1:], start=1):            # golpe grave en cada escena
             b = boom(dur=1.8, seed=10 + i)
             a = int(s * SR)
             out[:, a:a + len(b)] += b[:max(0, n - a)] * 0.32
-        r = riser(2.6)                                            # sube la tensión antes del cierre
-        a = int(max(0, starts[-1] - 2.6) * SR)
-        out[:, a:a + len(r)] += r[:max(0, n - a)]
+    r = riser(2.6) * (1.0 if cfg.get('golpes') else 0.6)          # sube la emoción antes del cierre
+    a = int(max(0, starts[-1] - 2.6) * SR)
+    out[:, a:a + len(r)] += r[:max(0, n - a)]
     if cfg['musica'] == 'tension':
         b = boom()
         out[:, int(0.15 * SR):int(0.15 * SR) + len(b)] += b * 0.55
@@ -498,8 +498,10 @@ class Video:
     def __init__(self, key, cfg):
         self.key, self.cfg = key, cfg
         self.epic = bool(cfg.get('epico'))
+        self.tres_d = cfg.get('tres_d', True)       # celular en 3D y destellos en todas las apps
         self.clips, self.phone_geo = {}, {}
         self.white = Image.new('RGBA', (W, H), (255, 245, 235, 255))
+        self.black = Image.new('RGBA', (W, H), (0, 0, 0, 255))
         self.black = Image.new('RGBA', (W, H), (0, 0, 0, 255))
         if self.epic:
             folder = os.path.join(CACHE, key, 'clips')
@@ -507,6 +509,7 @@ class Video:
                 self.clips[name] = Clip(os.path.join(folder, name))
             self.shade = vertical_shade()
             self.shade_soft = vertical_shade(170, 40, 190)
+            self.shade_bottom = vertical_shade(0, 0, 235)
             self.vign = red_vignette()
         self.www = os.path.join(gg.ROOT, cfg['folder'], 'app', 'src', 'main', 'assets', 'www')
         self.icon = Image.open(os.path.join(self.www, 'img', 'icono.png')).convert('RGBA')
@@ -602,12 +605,13 @@ class Video:
         """Portada sobre la toma real del globo: textos arriba, el planeta en el centro."""
         L = {}
         tag = pill(e['tag'], gg.font(FB, 34), self.cfg['color'] + (235,), fg=(10, 12, 22))
-        L['tag'] = (tag, ((W - tag.size[0]) // 2, 190))
+        top = 1260 if self.cfg.get('portada_abajo') else 190
+        L['tag'] = (tag, ((W - tag.size[0]) // 2, top))
         d = ImageDraw.Draw(Image.new('L', (1, 1)))
         tf, _ = gg.fit_font(d, e['t'], FB, 132, W - 70, min_size=70)
         t, pad = grad_text(e['t'], tf, self.c1, self.c2, glow=0.8)
-        L['title'] = (t, ((W - t.size[0]) // 2, 270 - pad))
-        y = 270 + t.size[1] - 2 * pad + 20
+        L['title'] = (t, ((W - t.size[0]) // 2, top + 80 - pad))
+        y = top + 80 + t.size[1] - 2 * pad + 20
         for i, line in enumerate(wrap(e['s'], gg.font(FS, 52), 940)):
             s, p2 = plain_text(line, gg.font(FS, 52))
             L[f'sub{i}'] = (s, ((W - s.size[0]) // 2, y - p2))
@@ -703,6 +707,8 @@ class Video:
             own = bool(e.get('bgclip'))
             img = self.clips[bgc].frame(u if own else t * 0.5, (W, H), loop=not own).convert('RGBA')
             img.alpha_composite(self.shade_soft if own else self.shade)
+            if own and self.cfg.get('portada_abajo'):
+                img.alpha_composite(self.shade_bottom)
             if e.get('cta'):
                 img = Image.blend(img, self.black, 0.38)
         else:
@@ -735,7 +741,7 @@ class Video:
                     lay = Image.new('RGBA', glow.size)
                     lay.alpha_composite(glow)
                     lay.alpha_composite(ph, (gpad, gpad))
-                if self.epic:
+                if self.epic or self.tres_d:
                     lay = tilt(lay, 9 * math.sin(u * 0.8 + si) + (1 - p) * 38, 3 * math.sin(u * 0.6))
             if name in ('icon',) and e.get('cta'):
                 bounce = 1 + 0.06 * math.sin(min(1, u / 0.6) * math.pi)
@@ -748,9 +754,9 @@ class Video:
                 nw, nh = int(lay.size[0] * pulse), int(lay.size[1] * pulse)
                 x, y, lay = x - (nw - lay.size[0]) // 2, y - (nh - lay.size[1]) // 2, lay.resize((nw, nh), Image.BILINEAR)
             img.alpha_composite(with_alpha(lay, k_a), (x, y + dy))
-        if self.epic:
+        if self.epic or self.tres_d:
             if si > 0 and u < 0.22:                              # destello al cambiar de escena
-                img = Image.blend(img, self.white, 0.45 * (1 - u / 0.22))
+                img = Image.blend(img, self.white, (0.45 if self.cfg.get('golpes') else 0.22) * (1 - u / 0.22))
             if e.get('tag') == 'ALARMA':                          # alarma: bordes rojos que laten
                 img.alpha_composite(with_alpha(self.vign, (0.35 + 0.3 * math.sin(u * 6.5)) * fade_out))
         # subtítulos
@@ -759,7 +765,7 @@ class Video:
                 a = min(1, (t - c0 + 0.05) / 0.15) * fade_out
                 img.alpha_composite(with_alpha(cim, a), ((W - cim.size[0]) // 2, 1635))
                 break
-        if self.epic:                                             # la cámara tiembla
+        if self.epic and self.cfg.get('golpes'):                 # la cámara tiembla (solo Orbe Sismos)
             amp = 0
             if t < 1.8:
                 amp = 12 * (1 - t / 1.8)

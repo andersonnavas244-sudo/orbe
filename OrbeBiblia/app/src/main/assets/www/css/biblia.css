@@ -200,7 +200,7 @@ body.reading #hero, body.reading #dust { opacity: 0; }
 .r-colors [data-hl="oro"] { background: #f5c26b; } .r-colors [data-hl="verde"] { background: #2fd27a; }
 .r-colors [data-hl="azul"] { background: #6fb8ff; } .r-colors [data-hl="rosa"] { background: #ff4fa3; }
 .r-colors .none { background: linear-gradient(135deg, transparent 45%, #ff6b6b 45% 55%, transparent 55%), #222a40; }
-.r-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.r-acts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .r-acts button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 14px; background: rgba(255, 255, 255, .06); font-size: 12px; }
 
 /* Hoja */
@@ -318,3 +318,46 @@ body.con-cuadro .hero-cap { display: none; }
 /* Mapa: nombres de los lugares pequeños solo al acercarse */
 .pin.minor span { display: none; }
 #mapa.zoom .pin.minor span { display: block; }
+
+/* ---------- Devocional, fechas especiales, memorizar, planes por tema y notas ---------- */
+.dev { display: block; width: 100%; text-align: left; padding: 16px; border-radius: 22px; border: 1px solid rgba(245, 194, 107, .35);
+  background: linear-gradient(150deg, rgba(70, 48, 20, .55), rgba(9, 13, 28, .9)); }
+.dev .k { font: 600 12px var(--display); letter-spacing: 1.4px; text-transform: uppercase; color: var(--gold); }
+.dev b { display: block; font: 700 18px var(--display); margin: 6px 0; }
+.dev p { margin: 0 0 10px; color: #e9e2d2; font: 15px/1.55 var(--serif); }
+.dev-v { font: italic 19px/1.6 var(--serif); color: #fff6e4; margin: 4px 2px 6px; }
+.dev-ref { font: 600 14px var(--display); color: var(--gold); margin: 0 2px 14px; }
+.dev-h { font: 600 12px var(--display); letter-spacing: 1.4px; text-transform: uppercase; color: var(--gold); margin: 14px 2px 6px; }
+.dev-t { font: 16.5px/1.65 var(--serif); color: #efe9dd; margin: 0 2px 6px; }
+.fiesta { position: relative; overflow: hidden; padding: 18px; border-radius: 24px; margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, .25); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+.fiesta.navidad { background: linear-gradient(135deg, #8c1d2c, #1d5a3a); }
+.fiesta.anonuevo { background: linear-gradient(135deg, #3b1d6e, #c2185b 60%, #f5a623); }
+.fiesta.semanasanta { background: linear-gradient(135deg, #3d1a5c, #7b3f9e 60%, #c9a227); }
+.fiesta .fe { font-size: 34px; } .fiesta b { display: block; font: 700 22px var(--display); margin: 2px 0; }
+.fiesta small { color: #f7eedd; } .fiesta .fiesta-acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+.fiesta .btn { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .3); color: #fff; padding: 9px 4px; font-size: 13px; }
+#fiesta-glow { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1s; }
+body.fiesta-navidad #fiesta-glow { opacity: 1; background: radial-gradient(circle at 20% 15%, rgba(255, 60, 60, .22), transparent 45%), radial-gradient(circle at 80% 20%, rgba(60, 220, 120, .2), transparent 45%); }
+body.fiesta-anonuevo #fiesta-glow { opacity: 1; background: radial-gradient(circle at 30% 12%, rgba(255, 200, 80, .28), transparent 40%), radial-gradient(circle at 75% 18%, rgba(255, 80, 180, .22), transparent 40%); }
+body.fiesta-semanasanta #fiesta-glow { opacity: 1; background: radial-gradient(circle at 50% 10%, rgba(160, 90, 220, .3), transparent 55%); }
+.memo { display: block; width: 100%; text-align: left; padding: 14px; border-radius: 20px; background: var(--glass); border: 1px solid var(--line); margin-bottom: 8px; }
+.memo .k { font: 600 12px var(--display); letter-spacing: 1.2px; text-transform: uppercase; color: #8fd3ff; }
+.memo p { margin: 6px 0; font: italic 16px/1.5 var(--serif); }
+.memo cite { font: 600 13px var(--display); color: var(--gold); font-style: normal; }
+.mg-text { font: 19px/1.9 var(--serif); margin: 4px 2px 14px; }
+.mg-text .hole { display: inline-block; min-width: 52px; border-bottom: 2px solid var(--gold); margin: 0 3px; color: transparent; }
+.mg-text .hole.next { border-color: #8fd3ff; background: rgba(143, 211, 255, .12); }
+.mg-text .got { color: #9be8b8; font-weight: 600; }
+.mg-bank { display: flex; flex-wrap: wrap; gap: 8px; }
+.mg-bank button { padding: 9px 13px; border-radius: 14px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line); font-weight: 600; }
+.mg-bank button.used { opacity: .25; pointer-events: none; }
+.mg-bank button.err { border-color: #ff4f6d; background: rgba(255, 79, 109, .25); }
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.levels button { padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); font-weight: 600; }
+.levels button[aria-pressed="true"] { background: var(--gold); color: #1b1405; }
+.levels button.done::after { content: ' ✓'; }
+.nota-v { display: flex; gap: 8px; align-items: flex-start; margin: -2px 6px 10px 22px; padding: 8px 10px; border-radius: 12px; background: rgba(143, 211, 255, .1); border-left: 3px solid #8fd3ff;
+  font: 14.5px/1.5 'Inter', sans-serif; color: #cfe6ff; cursor: pointer; }
+.nota-v svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+#reader.sepia .nota-v, #reader.claro .nota-v { color: #1f4a7a; background: rgba(31, 74, 122, .08); }
+.nota-area { width: 100%; background: rgba(255, 255, 255, .06); color: var(--text); border: 1px solid var(--line); border-radius: 14px; padding: 12px; font: 16px/1.5 var(--serif); margin-bottom: 10px; resize: vertical; }

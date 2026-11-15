@@ -19,7 +19,7 @@ APPS = {
     'sismos': dict(
         title='Orbe Sismos', folder='OrbeSismos', voz='Pablo', musica='tension', color=(255, 90, 60),
         # Versión épica: tomas reales del globo 3D de la app (grabar_globo_sismos.js), celular en 3D y golpes de sonido
-        epico=True, fondo_clip='cinturon',
+        epico=True, fondo_clip='cinturon', golpes=True,
         slogan='Un sismo no avisa. Tú sí puedes estar preparado.',
         nota='Orbe Sismos avisa cuando los centros sismológicos publican el sismo. Nadie puede predecir un terremoto.',
         escenas=[
@@ -147,9 +147,11 @@ APPS = {
         ]),
     'biblia': dict(
         title='Orbe Biblia', folder='OrbeBiblia', voz='Laura', musica='biblia', color=(245, 194, 107),
+        # Tomas reales de Jesús con el planeta girando (grabar_hero_biblia.js) de portada y de fondo
+        epico=True, fondo_clip='jesus', portada_abajo=True,
         slogan='Un versículo para cada día.',
         escenas=[
-            dict(img=None, tag='CADA MAÑANA', t='Empieza el día con fe', s='la Palabra de Dios en tu celular',
+            dict(img=None, bgclip='jesus', tag='CADA MAÑANA', t='Empieza el día con fe', s='la Palabra de Dios en tu celular',
                  n='¿Buscas paz para empezar el día? Lleva la Palabra de Dios contigo, siempre, aunque no tengas internet.'),
             dict(img='capturas/telefono-1-hoy.png', tag='EN 3D', t='Jesús sostiene el mundo', s='y te regala un versículo cada día',
                  n='Orbe Biblia te recibe con Jesús sosteniendo el mundo en su mano, y un versículo nuevo para cada día del año.'),

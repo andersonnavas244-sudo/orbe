@@ -19,7 +19,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, '..', 'app', 'src', 'main', 'assets', 'www', 'data')
 sys.path.insert(0, HERE)
-from build_biblia import LIBROS, POR_NOMBRE  # noqa: E402
+from build_biblia import LIBROS, POR_NOMBRE, TEMAS  # noqa: E402
+from contenido_devocional import REFLEXIONES, ORACIONES_TEMA, PLANES_TEMA, FECHAS  # noqa: E402
 
 BOOKS = {}
 
@@ -28,6 +29,16 @@ def book(code):
     if code not in BOOKS:
         BOOKS[code] = json.load(open(os.path.join(DATA, 'biblia', code + '.json'), encoding='utf-8'))
     return BOOKS[code]
+
+
+def passage(ref):
+    """'Mateo 6:25-34' → [ref, código, capítulo, v0, v1, texto]."""
+    m = re.match(r'^(.+?) (\d+):(\d+)(?:-(\d+))?$', ref)
+    code = POR_NOMBRE[m.group(1).lower()]
+    c, v0 = int(m.group(2)), int(m.group(3))
+    v1 = int(m.group(4) or v0)
+    r, t = verse(ref)
+    return [r, code, c, v0, v1]
 
 
 def verse(ref):
@@ -290,6 +301,38 @@ def main():
     out('trivia.json', [{'q': q, 'o': o, 'r': ref} for q, o, _, ref in TRIVIA])   # la respuesta correcta es siempre la primera (se barajan en la app)
     out('lugares.json', {'lugares': [{'k': k, 'n': n, 'lat': la, 'lng': lo, 'd': d, 'v': [verse(r) for r in refs]} for k, n, la, lo, d, refs in LUGARES],
                          'rutas': [{'k': k, 'n': n, 'c': c, 'p': p} for k, n, c, p in RUTAS]})
+    # Devocional: el versículo del día + una reflexión y una oración de su tema
+    temas_dia = {t for _, _, t in json.load(open(os.path.join(DATA, 'diario.json'), encoding='utf-8'))}
+    assert temas_dia <= set(REFLEXIONES), temas_dia - set(REFLEXIONES)
+    out('devocional.json', {'reflexiones': REFLEXIONES, 'oraciones': ORACIONES_TEMA})
+    # Planes por tema
+    out('planes-tema.json', [{'k': k, 'n': n, 'e': e, 'd': d, 'dias': [passage(r) for r in refs]} for k, n, e, d, refs in PLANES_TEMA])
+    # Versículo para memorizar cada semana: 52 versículos cortos y conocidos de los temas
+    pool, seen = [], set()
+    EXCLUIR = {'Malaquías 4:6', 'Génesis 2:24', 'Proverbios 22:6', 'Deuteronomio 6:7', 'Éxodo 20:12', 'Efesios 6:1', 'Efesios 6:2'}
+    for key in ('animo', 'fe', 'paz', 'amor', 'esperanza', 'gratitud', 'sabiduria', 'familia'):
+        label, refs = TEMAS[key]
+        for r in refs:
+            if r in seen or r in EXCLUIR:
+                continue
+            ref, txt = verse(r)
+            if 50 <= len(txt) <= 150:
+                pool.append([ref, txt]); seen.add(r)
+    order = []
+    while pool and len(order) < 52:     # alterna temas para que no se repitan seguidos
+        order.append(pool.pop(0 if len(order) % 2 == 0 else len(pool) // 2))
+    out('memorizar.json', order)
+    # Fechas especiales
+    f = {}
+    for k, v in FECHAS.items():
+        x = dict(v)
+        if 'lecturas' in x:
+            x['lecturas'] = [passage(r) for r in x['lecturas']]
+        if 'dias' in x:
+            x['dias'] = [[n, *passage(r)] for n, r in x['dias']]
+        f[k] = x
+    out('fechas.json', f)
+    print(f'devocional: {sum(len(v) for v in REFLEXIONES.values())} reflexiones · {len(PLANES_TEMA)} planes por tema · {len(order)} versículos para memorizar')
     print(f'{len(SENTIMIENTOS)} sentimientos, {len(TARJETAS)} tarjetas, {len(TRIVIA)} preguntas, {len(LUGARES)} lugares, {len(RUTAS)} rutas')
     if len(sys.argv) > 1:
         kjv(sys.argv[1])

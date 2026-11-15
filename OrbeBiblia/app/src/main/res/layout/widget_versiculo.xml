@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget de Orbe Biblia: Jesús con la Tierra y el versículo del día -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/w_img"
+        android:layout_width="64dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="12dp"
+        android:contentDescription="Jesús sosteniendo la Tierra"
+        android:scaleType="centerCrop"
+        android:src="@drawable/widget_jesus" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/w_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✨ VERSÍCULO DEL DÍA"
+            android:textColor="#F5C26B"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
+
+        <TextView
+            android:id="@+id/w_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:fontFamily="serif"
+            android:lineSpacingMultiplier="1.1"
+            android:maxLines="5"
+            android:textColor="#FFF8EA"
+            android:textSize="14sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/w_ref"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#FFD38A"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

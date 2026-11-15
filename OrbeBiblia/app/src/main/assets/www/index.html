@@ -13,6 +13,7 @@
   <div id="hero" aria-label="Jesús sosteniendo el mundo">
     <img id="cuadro" alt="" hidden>
     <div id="hero-fade"></div>
+    <div id="fiesta-glow"></div>
     <div id="halo"></div>
     <div id="globe" aria-hidden="true"></div>
     <div id="sheen"></div>
@@ -38,6 +39,7 @@
   <!-- HOY: versículo del día sobre el planeta -->
   <main id="v-hoy" class="view active">
     <div class="hero-cap"><b id="hero-title">La luz del mundo</b><small>Versículo de hoy ↓</small></div>
+    <div id="x-fecha"></div>
     <article class="verse-card" id="vd">
       <div class="vd-tag"><span id="vd-tema">Versículo del día</span></div>
       <blockquote id="vd-text"></blockquote>
@@ -49,6 +51,9 @@
         <button class="act" data-act="vd-read"><i data-ico="book"></i><span>Leer</span></button>
       </div>
     </article>
+    <section class="block">
+      <div id="x-devocional"></div>
+    </section>
     <section class="block">
       <h3>¿Cómo te sientes hoy?</h3>
       <div id="x-sentir"></div>
@@ -73,6 +78,7 @@
     </section>
     <section class="block">
       <h3>Juega y aprende</h3>
+      <div id="x-memorizar"></div>
       <div id="x-trivia"></div>
     </section>
     <section class="block">
@@ -80,6 +86,7 @@
       <div id="x-tarjetas"></div>
     </section>
     <section class="block" id="hoy-plan"></section>
+    <section class="block" id="x-plan-tema"></section>
     <section class="block">
       <h3>Seguir leyendo</h3>
       <div id="continuar"></div>
@@ -136,6 +143,7 @@
       <div class="r-acts">
         <button data-act="s-fav"><i data-ico="heart"></i>Guardar</button>
         <button data-act="s-share"><i data-ico="share"></i>Imagen</button>
+        <button data-act="s-note"><i data-ico="note"></i>Nota</button>
         <button data-act="s-copy"><i data-ico="copy"></i>Copiar</button>
         <button data-act="s-listen"><i data-ico="audio"></i>Escuchar</button>
       </div>

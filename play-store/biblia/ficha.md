@@ -18,6 +18,13 @@ La Biblia sin internet: versículo del día, oraciones, trivia y lugares en 3D.
 • Compártelo como una imagen hermosa en tus estados de WhatsApp, Instagram y Facebook.
 • Notificación diaria a la hora que tú elijas.
 
+📖 DEVOCIONAL DIARIO Y WIDGET
+• Cada día: el versículo, una reflexión corta y una oración.
+• Widget para la pantalla de tu celular con el versículo del día y Jesús sosteniendo la Tierra.
+
+🎄 FECHAS ESPECIALES
+• En Navidad, Año Nuevo y Semana Santa la app se viste de fiesta, con lecturas, oraciones y tarjetas para cada día.
+
 😊 ¿CÓMO TE SIENTES HOY?
 • Triste, ansioso, solo, con miedo, enfermo, cansado, agradecido… y la Palabra de Dios para ese momento.
 
@@ -58,6 +65,11 @@ La Biblia sin internet: versículo del día, oraciones, trivia y lugares en 3D.
 
 📅 PLANES DE LECTURA
 • La Biblia en 1 año, el Nuevo Testamento en 90 días, y Salmos y Proverbios en 31 días.
+• Planes por tema: vencer la ansiedad, matrimonio, perdón, finanzas, jóvenes, consuelo en el dolor y fe.
+
+📝 MEMORIZA Y TOMA NOTAS
+• Un versículo para memorizar cada semana, con un juego de completar palabras en 3 niveles.
+• Escribe tus notas personales en cualquier versículo.
 • La app te muestra qué leer cada día y lleva tu avance.
 
 🎵 MÚSICA PARA ORAR

@@ -7,6 +7,8 @@
   const todayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const dayNum = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / DAY);
   const isMorning = () => { const h = new Date().getHours(); return h >= 4 && h < 18; };
+  // fecha de hoy (para probar fechas especiales: index.html?fecha=2026-12-24)
+  const hoyDate = () => { const m = location.search.match(/[?&]fecha=(\d{4})-(\d\d)-(\d\d)/); return m ? new Date(+m[1], +m[2] - 1, +m[3], 12) : new Date(); };
   function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
 
   // =====================================================================
@@ -172,6 +174,7 @@
   //  Hoy: ¿cómo te sientes?, buenos días, oración del día, trivia, lugares, tarjetas
   // =====================================================================
   function hoy() {
+    renderFiesta(); renderDevocional(); renderMemo(); renderPlanTemaHoy();
     const st = streak();
     const chip = B.$('#racha'); if (chip) { chip.textContent = `🔥 ${st}`; chip.hidden = false; }
     const m = isMorning();
@@ -223,6 +226,144 @@
       <label class="field"><span>Para (opcional)</span><input id="tj-para" maxlength="30" placeholder="Nombre de la persona" value="${B.esc(para)}"></label>
       <div class="prayer-acts"><button class="btn" data-x="tj-verso">📖 Otro versículo</button><button class="btn" data-x="tj-fondo">🎨 Otro fondo</button><button class="btn gold" data-x="tj-share">📤 Enviar</button></div>`);
     preview(B.$('#tj-img'), { bg, title: t.t, para, text: v[1], ref: v[0] }).catch(() => {});
+  }
+
+  // =====================================================================
+  //  Fechas especiales: Navidad, Año Nuevo y Semana Santa
+  // =====================================================================
+  function pascua(Y) {   // domingo de Pascua (algoritmo anónimo gregoriano)
+    const a = Y % 19, b = Math.floor(Y / 100), c = Y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(Y, month - 1, day, 12);
+  }
+  function fiesta() {
+    const d = hoyDate(), M = d.getMonth() + 1, D = d.getDate();
+    if ((M === 12 && D === 31) || (M === 1 && D <= 6)) return { k: 'anonuevo', i: M === 12 ? 0 : D };
+    if (M === 12) return { k: 'navidad', i: D };
+    const p = pascua(d.getFullYear()), diff = Math.round((d - p) / DAY);
+    if (diff >= -7 && diff <= 1) return { k: 'semanasanta', i: diff + 7 };
+    return null;
+  }
+  function renderFiesta() {
+    const f = fiesta(), box = B.$('#x-fecha');
+    document.body.classList.remove('fiesta-navidad', 'fiesta-anonuevo', 'fiesta-semanasanta');
+    window.__dustColor = null; window.__dustSize = 1;
+    if (!f) { box.innerHTML = ''; return; }
+    const x = D.fechas[f.k];
+    document.body.classList.add('fiesta-' + f.k);
+    if (f.k === 'navidad') { window.__dustColor = '#ffffff'; window.__dustSize = 1.6; }
+    if (f.k === 'anonuevo') { window.__dustColor = '#ffe08a'; window.__dustSize = 1.4; }
+    if (f.k === 'semanasanta') window.__dustColor = '#e7c8ff';
+    let sub, lect;
+    if (x.dias) { const dd = x.dias[Math.min(f.i, x.dias.length - 1)]; sub = `${dd[0]}: ${dd[1]}`; lect = dd.slice(1); }
+    else { lect = x.lecturas[f.i % x.lecturas.length]; sub = `Lectura de hoy: ${lect[0]}`; }
+    state.fiesta = { f, x, lect };
+    box.innerHTML = `<div class="fiesta ${f.k}"><span class="fe">${x.e}</span><b>${B.esc(x.t)}</b><small>${B.esc(sub)}</small>
+      <div class="fiesta-acts"><button class="btn" data-open="${lect[1]}.${lect[2]}.${lect[3]}">📖 Leer</button><button class="btn" data-x="fiesta-oracion">🙏 Oración</button><button class="btn" data-x="fiesta-tarjeta">🎁 Tarjeta</button></div></div>`;
+  }
+
+  // =====================================================================
+  //  Devocional diario: el versículo del día + reflexión + oración
+  // =====================================================================
+  function devocional() {
+    const v = B.todayVerse(), n = B.dayOfYear(hoyDate());
+    const refl = D.devocional.reflexiones[v.tema] || D.devocional.reflexiones['Fe'];
+    const ora = D.devocional.oraciones[v.tema] || D.devocional.oraciones['Fe'];
+    return { v, r: refl[n % refl.length], o: ora[n % ora.length] };
+  }
+  function renderDevocional() {
+    const d = devocional();
+    B.$('#x-devocional').innerHTML = `<button class="dev" data-x="devocional"><span class="k">📖 Devocional de hoy · ${B.esc(d.v.tema)}</span>
+      <b>${B.esc(d.v.ref)}</b><p>${B.esc(d.r.slice(0, 120))}…</p><span class="btn gold">Leer el devocional</span></button>`;
+  }
+  function openDevocional() {
+    const d = devocional();
+    state.dev = d;
+    B.openSheet('📖 Devocional de hoy', new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' }), `
+      <div class="dev-v">“${B.esc(d.v.text)}”</div><div class="dev-ref">${B.esc(d.v.ref)}</div>
+      <div class="dev-h">Reflexión</div><p class="dev-t">${B.esc(d.r)}</p>
+      <div class="dev-h">Oración</div><p class="dev-t" style="font-style:italic">${B.esc(d.o)}</p>
+      <div class="prayer-acts"><button class="btn" data-x="dev-listen">🔊 Escuchar</button><button class="btn gold" data-x="dev-share">📤 Compartir</button><button class="btn" data-x="dev-leido">✅ Leído</button></div>`);
+  }
+
+  // =====================================================================
+  //  Versículo para memorizar (uno por semana) y juego de completar palabras
+  // =====================================================================
+  const semana = () => Math.floor((hoyDate() - new Date(2024, 0, 1)) / (7 * DAY));
+  const memoVerse = () => D.memorizar[semana() % D.memorizar.length];
+  function renderMemo() {
+    const [ref, text] = memoVerse(), done = B.store.get('memo-' + semana(), {});
+    B.$('#x-memorizar').innerHTML = `<button class="memo" data-x="memo"><span class="k">📝 Versículo de la semana</span><p>“${B.esc(text)}”</p>
+      <cite>${B.esc(ref)}</cite> <small style="color:var(--muted)">${done.dificil ? '· ✅ ¡Lo memorizaste!' : done.medio ? '· nivel medio ✓' : done.facil ? '· nivel fácil ✓' : '· toca para practicar'}</small></button>`;
+  }
+  const NIVELES = { facil: ['Fácil', 0.3], medio: ['Medio', 0.6], dificil: ['Difícil', 1] };
+  function openMemo(nivel = 'facil') {
+    const [ref, text] = memoVerse(), done = B.store.get('memo-' + semana(), {});
+    const words = text.split(' ');
+    const cand = words.map((w, i) => [w.replace(/[.,;:¿?¡!«»“”()]/g, ''), i]).filter(([w]) => w.length >= 4);
+    const r = rng(semana() * 31 + nivel.length);
+    const pick = cand.filter(() => r() < NIVELES[nivel][1]);
+    if (!pick.length && cand.length) pick.push(cand[0]);
+    const holes = pick.map(([w, i]) => ({ w, i })).sort((a, b) => a.i - b.i);
+    const bank = holes.map(h => h.w).map(w => [w, r()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+    state.memo = { nivel, holes, next: 0, ref, words, bank, errs: 0 };
+    B.openSheet(`📝 ${ref}`, 'Toca las palabras en orden para completar el versículo', `
+      <div class="levels">${Object.entries(NIVELES).map(([k, [n]]) => `<button data-memo-nivel="${k}" aria-pressed="${k === nivel}" class="${done[k] ? 'done' : ''}">${n}</button>`).join('')}</div>
+      <div class="mg-text" id="mg-text"></div><div class="mg-bank" id="mg-bank">${bank.map((w, j) => `<button data-mg="${j}">${B.esc(w)}</button>`).join('')}</div>`);
+    drawMemo();
+  }
+  function drawMemo() {
+    const m = state.memo, holeAt = new Map(m.holes.map((h, k) => [h.i, k]));
+    B.$('#mg-text').innerHTML = m.words.map((w, i) => {
+      if (!holeAt.has(i)) return B.esc(w);
+      const k = holeAt.get(i), h = m.holes[k];
+      const tail = w.slice(w.indexOf(h.w) + h.w.length), head = w.slice(0, w.indexOf(h.w));
+      return k < m.next ? `${B.esc(head)}<span class="got">${B.esc(h.w)}</span>${B.esc(tail)}` : `${B.esc(head)}<span class="hole${k === m.next ? ' next' : ''}">${B.esc(h.w)}</span>${B.esc(tail)}`;
+    }).join(' ');
+  }
+  function memoPick(j, btn) {
+    const m = state.memo; if (!m || m.next >= m.holes.length) return;
+    if (m.bank[j] === m.holes[m.next].w) {
+      btn.classList.add('used'); m.next++; drawMemo();
+      if (m.next >= m.holes.length) {
+        const done = B.store.get('memo-' + semana(), {}); done[m.nivel] = true; B.store.set('memo-' + semana(), done);
+        B.toast(m.errs ? '🎉 ¡Completado! Intenta sin errores' : '🏆 ¡Perfecto, sin errores!', 3500);
+        renderMemo();
+        const sig = m.nivel === 'facil' ? 'medio' : m.nivel === 'medio' ? 'dificil' : null;
+        if (sig) setTimeout(() => openMemo(sig), 1600);
+      }
+    } else { m.errs++; btn.classList.add('err'); setTimeout(() => btn.classList.remove('err'), 600); if (navigator.vibrate) navigator.vibrate(60); }
+  }
+
+  // =====================================================================
+  //  Planes por tema (en la pestaña Planes)
+  // =====================================================================
+  function planesTema() {
+    const p = B.store.get('plan-tema', null);
+    let html = '';
+    if (p) {
+      const x = D.planesTema.find(z => z.k === p.id);
+      if (x) {
+        const n = x.dias.length, d = Math.min(n - 1, Math.max(0, Math.floor((Date.now() - p.start) / DAY))), done = new Set(p.done || []);
+        const r = x.dias[d];
+        html += `<section class="block"><h3>Tu plan por tema</h3><div class="plan"><span class="em">${x.e}</span><h4>${B.esc(x.n)}</h4><p>Día ${d + 1} de ${n} · ${done.size} días completados</p>
+          <div class="bar"><i style="width:${Math.round(done.size / n * 100)}%"></i></div>
+          <div class="today"><button data-open="${r[1]}.${r[2]}.${r[3]}">📖 ${B.esc(r[0])}</button></div>
+          ${done.has(d) ? '<p style="color:var(--gold)">✅ Lectura de hoy completada.</p>' : `<button class="btn gold block" data-x="pt-done">✅ Marcar la lectura de hoy</button>`}
+          <button class="btn block" data-x="pt-stop" style="margin-top:8px">Dejar este plan</button></div></section>`;
+      }
+    }
+    html += `<section class="block"><h3>Planes por tema</h3>${D.planesTema.filter(x => !p || x.k !== p.id).map(x =>
+      `<button class="plan" data-pt="${x.k}"><span class="em">${x.e}</span><h4>${B.esc(x.n)}</h4><p>${B.esc(x.d)} · ${x.dias.length} días</p></button>`).join('')}</section>`;
+    return html;
+  }
+  function renderPlanTemaHoy() {
+    const p = B.store.get('plan-tema', null), box = B.$('#x-plan-tema');
+    const x = p && D.planesTema.find(z => z.k === p.id);
+    if (!x) { box.innerHTML = ''; return; }
+    const d = Math.min(x.dias.length - 1, Math.max(0, Math.floor((Date.now() - p.start) / DAY))), r = x.dias[d];
+    box.innerHTML = `<h3>${x.e} ${B.esc(x.n)}</h3><button class="row" data-open="${r[1]}.${r[2]}.${r[3]}"><span class="badge-ico">${x.e}</span><span><b>Día ${d + 1}: ${B.esc(r[0])}</b><small>${(p.done || []).includes(d) ? '✅ Completado' : 'Tu lectura de hoy'}</small></span><i class="go" data-ico="next"></i></button>`;
   }
 
   // =====================================================================
@@ -341,7 +482,15 @@
       ${resp.length ? `<details class="dx-resp"><summary>🙌 ${resp.length} ${resp.length === 1 ? 'oración respondida' : 'oraciones respondidas'}</summary>
         ${resp.map(x => `<div class="dx done"><p>${B.esc(x.t)}</p><small>Respondida el ${new Date(x.r).toLocaleDateString('es')}</small><button class="icon-x" data-dx-del="${x.id}" aria-label="Borrar">✕</button></div>`).join('')}</details>` : ''}
     </section>
-    <section class="block"><h3>Avisos para orar</h3>${avisos}</section>`;
+    <section class="block"><h3>Avisos para orar</h3>${avisos}</section>
+    ${notasHtml()}`;
+  }
+  function notasHtml() {
+    const n = Object.entries(B.store.get('notas', {})).sort((a, b) => b[1].d - a[1].d);
+    if (!n.length) return '';
+    return `<section class="block"><h3>✎ Mis notas (${n.length})</h3>${n.slice(0, 50).map(([k, x]) => {
+      const [code, c, v] = k.split('.');
+      return `<button class="res" data-open="${code}.${c}.${v}"><cite>${B.esc(x.ref)}</cite><p style="font-family:Inter,sans-serif;font-size:14.5px">${B.esc(x.t)}</p></button>`; }).join('')}</section>`;
   }
   function savePrayer(k, on) {
     const inp = document.querySelector(`[data-ora-hora="${k}"]`);
@@ -362,12 +511,25 @@
     const fe = t.closest('[data-feel]'); if (fe) { openFeel(fe.dataset.feel); return; }
     const tj = t.closest('[data-tj]'); if (tj) { state.tj = null; openTarjeta(tj.dataset.tj); return; }
     const tv = t.closest('[data-tv]'); if (tv) { triviaAnswer(+tv.dataset.tv); return; }
+    const mn = t.closest('[data-memo-nivel]'); if (mn) { openMemo(mn.dataset.memoNivel); return; }
+    const mg = t.closest('[data-mg]'); if (mg) { memoPick(+mg.dataset.mg, mg); return; }
+    const pt = t.closest('[data-pt]'); if (pt) { B.store.set('plan-tema', { id: pt.dataset.pt, start: new Date().setHours(0, 0, 0, 0), done: [] }); B.toast('📅 Plan iniciado'); B.renderPlanes(); return; }
     const ru = t.closest('[data-ruta]'); if (ru) { filterRuta(ru.dataset.ruta); return; }
     const ok = t.closest('[data-dx-ok]'); if (ok) { const l = diario(); const x = l.find(i => i.id === +ok.dataset.dxOk); if (x) { x.r = Date.now(); B.store.set('diario-oracion', l); B.toast('🙌 ¡Gloria a Dios!'); B.selectTab('mas'); } return; }
     const del = t.closest('[data-dx-del]'); if (del) { B.store.set('diario-oracion', diario().filter(i => i.id !== +del.dataset.dxDel)); B.selectTab('mas'); return; }
     const x = t.closest('[data-x]'); if (!x) return;
     const a = x.dataset.x;
     if (a === 'racha') openRacha();
+    else if (a === 'devocional') openDevocional();
+    else if (a === 'dev-listen' && state.dev) B.speak(`${state.dev.v.text}. ${state.dev.v.ref}. ${state.dev.r} ${state.dev.o}`, 'devocional');
+    else if (a === 'dev-share' && state.dev) { const d = state.dev; const txt = `📖 Devocional de hoy\n\n“${d.v.text}” ${d.v.ref}\n\n${d.r}\n\n🙏 ${d.o}\n\nOrbe Biblia: ${B.PLAY}`; B.NATIVE ? B.N.share(txt) : window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener'); }
+    else if (a === 'dev-leido') { B.store.set('dev-' + todayKey(), 1); B.closeSheet(); B.toast('🙌 ¡Devocional de hoy completado!'); }
+    else if (a === 'memo') openMemo(B.store.get('memo-' + semana(), {}).facil ? (B.store.get('memo-' + semana(), {}).medio ? 'dificil' : 'medio') : 'facil');
+    else if (a === 'fiesta-oracion' && state.fiesta) B.openSheet(`${state.fiesta.x.e} ${state.fiesta.x.t}`, 'Oración', `<div class="prayer">${B.esc(state.fiesta.x.oracion)}</div><div class="prayer-acts"><button class="btn" data-x="fiesta-escuchar">🔊 Escuchar</button></div>`);
+    else if (a === 'fiesta-escuchar' && state.fiesta) B.speak(state.fiesta.x.oracion, 'oracion');
+    else if (a === 'fiesta-tarjeta' && state.fiesta) { state.tj = null; openTarjeta(state.fiesta.x.tarjeta); }
+    else if (a === 'pt-done') { const p = B.store.get('plan-tema', null); if (p) { const d = Math.max(0, Math.floor((Date.now() - p.start) / DAY)); p.done = [...new Set([...(p.done || []), d])]; B.store.set('plan-tema', p); B.toast('🙌 ¡Lectura completada!'); B.renderPlanes(); } }
+    else if (a === 'pt-stop') { B.store.set('plan-tema', null); B.renderPlanes(); }
     else if (a === 'racha-compartir') { const st = streak(); B.N && B.NATIVE ? B.N.share(`🔥 Llevo ${st} días seguidos leyendo la Biblia con Orbe Biblia. ¿Te unes? ${B.PLAY}`) : B.toast(`🔥 ${st} días`); }
     else if (a === 'gm-share' && state.gm) makeCard(state.gm).then(cv => shareCanvas(cv, `${state.gm.title} “${state.gm.text}” ${state.gm.ref}`));
     else if (a === 'gm-otra') { B.store.set('saludo-' + todayKey(), B.store.get('saludo-' + todayKey(), dayNum()) + 1); hoy(); }
@@ -403,14 +565,15 @@
 
   async function init(api) {
     B = api;
-    const [sentimientos, oraciones, saludos, tarjetas, trivia, lugares] = await Promise.all(
-      ['sentimientos', 'oraciones-dia', 'saludos', 'tarjetas', 'trivia', 'lugares'].map(n => B.getJSON(`data/${n}.json`)));
-    D = { sentimientos, oraciones, saludos, tarjetas, trivia, lugares };
+    const [sentimientos, oraciones, saludos, tarjetas, trivia, lugares, devocional, planesTema, memorizar, fechas] = await Promise.all(
+      ['sentimientos', 'oraciones-dia', 'saludos', 'tarjetas', 'trivia', 'lugares', 'devocional', 'planes-tema', 'memorizar', 'fechas'].map(n => B.getJSON(`data/${n}.json`)));
+    D = { sentimientos, oraciones, saludos, tarjetas, trivia, lugares, devocional, planesTema, memorizar, fechas };
     visit();
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
     B.$('#racha').onclick = openRacha;
   }
 
-  window.OrbeExtras = { init, hoy, mas, act, back, openOracionDia, openMapa, openTrivia, openTarjeta, openFeel, makeCard, streak };
+  window.OrbeExtras = { init, hoy, mas, act, back, openOracionDia, openMapa, openTrivia, openTarjeta, openFeel, makeCard, streak, planesTema,
+    openDevocional, openMemo, fiesta };
 })();

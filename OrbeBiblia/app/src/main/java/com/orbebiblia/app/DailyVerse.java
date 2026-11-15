@@ -85,6 +85,7 @@ public class DailyVerse extends BroadcastReceiver {
     @Override
     public void onReceive(Context c, Intent intent) {
         if (enabled(c)) show(c);
+        try { VersiculoWidget.updateAll(c); } catch (Exception ignored) { }
         schedule(c);
     }
 
