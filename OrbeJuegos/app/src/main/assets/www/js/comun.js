@@ -140,10 +140,12 @@
   /* ---------- render y bucle ---------- */
   const cv = document.getElementById('c');
   const R = OJ.R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: Q.has('captura') });
-  let pr = Math.min(window.devicePixelRatio || 1, +Q.get('dpr') || OJ.store.get('pr3', 3));      // Ultra HD: usa toda la resolución de la pantalla
+  /* Nitidez alta sin ahogar al celular: hasta 2x y como máximo ~2,1 millones de píxeles por cuadro (una pantalla 1080p) */
+  const tope = Math.sqrt(2.1e6 / Math.max(1, window.innerWidth * window.innerHeight));
+  let pr = Math.max(1, Math.min(window.devicePixelRatio || 1, +Q.get('dpr') || Math.min(OJ.store.get('pr4', 2), tope)));
   OJ.aniso = Math.min(16, R.capabilities.getMaxAnisotropy());
   R.setPixelRatio(pr);
-  R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+  R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFShadowMap;
   R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping;
   let cur = null, last = 0;
   function resize() {
@@ -169,19 +171,21 @@
   let lento = 0;
   function medir(real) {
     if (real > 0.5 || Q.has('dpr')) return;
-    if (real > 0.036) lento += real; else lento = Math.max(0, lento - real * 0.6);
-    if (lento < 2.2) return;
+    if (real > 0.026) lento += real; else lento = Math.max(0, lento - real * 0.5);      // por debajo de ~38 cuadros por segundo
+    if (lento < 1.4) return;
     lento = 0;
-    if (pr > 1) { pr = Math.max(1, pr - 0.5); R.setPixelRatio(pr); OJ.store.set('pr3', pr); resize(); }
+    if (pr > 1) { pr = Math.max(1, pr - 0.25); R.setPixelRatio(pr); OJ.store.set('pr4', pr); resize(); }
     else if (R.shadowMap.enabled) { R.shadowMap.enabled = false; if (cur) cur.scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); }
   }
+  /* Las sombras se recalculan un cuadro sí y otro no: casi no se nota y ahorra mucho en el celular */
+  R.shadowMap.autoUpdate = false; let cuadro = 0;
   function frame(t) {
     requestAnimationFrame(frame);
     const real = (t - last) / 1000, dt = Math.min(real, 0.05); last = t;
-    if (cur && !OJ.pausado) { cur.update(dt); R.render(cur.scene, cur.cam); medir(real); }
+    if (cur && !OJ.pausado) { cur.update(dt); R.shadowMap.needsUpdate = (cuadro++ & 1) === 0; R.render(cur.scene, cur.cam); medir(real); }
   }
   /* Para pruebas: adelanta el juego sin esperar al reloj */
-  OJ.avanzar = function (seg) { const n = Math.round(seg * 60); for (let i = 0; i < n && cur; i++) cur.update(1 / 60); if (cur) R.render(cur.scene, cur.cam); };
+  OJ.avanzar = function (seg) { const n = Math.round(seg * 60); for (let i = 0; i < n && cur; i++) cur.update(1 / 60); if (cur) { R.shadowMap.needsUpdate = true; R.render(cur.scene, cur.cam); } };
   OJ.iniciar = function () { resize(); requestAnimationFrame(frame); };
 
   /* ---------- entrada táctil sobre el lienzo ---------- */

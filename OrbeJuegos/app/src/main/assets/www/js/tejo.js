@@ -12,7 +12,9 @@
   const P0 = V(0, 1.05, 6.75);              // de dónde sale el tejo (la mano del jugador)
   const CAM_Y = 1.9, CAM_Z = 12.3, MECHA_R = 0.25, POR_RONDA = 2;
   const EQ = [{ c: '#1e56c9', hex: 0x1e56c9 }, { c: '#d0202f', hex: 0xd0202f }];
-  const SWAY = [0.011, 0.019, 0.028], IA_ANG = [0.034, 0.02, 0.011], IA_VEL = [0.34, 0.2, 0.1], GUIA = [1, 0.62, 0.36];
+  /* Puntería de la máquina (fácil, normal, difícil): acierta más o menos 12 %, 24 % y 44 % de sus tiros.
+   El pulso del jugador tiembla menos que antes para que sea justo. */
+  const SWAY = [0.006, 0.011, 0.018], IA_ANG = [0.07, 0.048, 0.03], IA_VEL = [0.6, 0.42, 0.27], IA_FALLA = [0.15, 0.1, 0.05], GUIA = [1, 0.8, 0.5];
 
   /* Trayectoria completa de un lanzamiento (la misma para la guía, la máquina y el tiro real) */
   function tray(phi, s) {
@@ -247,7 +249,7 @@
     /* ---------------- luz ---------------- */
     scene.add(new THREE.HemisphereLight(0xe6f4ff, 0x8a7448, 0.42));
     const sun = new THREE.DirectionalLight(0xfff1d2, 1.3); sun.position.set(-6, 11, 11); sun.target.position.set(0, 0, 3); scene.add(sun.target); sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -6.5, right: 6.5, top: 9, bottom: -9, near: 1, far: 40 }); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02; scene.add(sun);
+    sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -6.5, right: 6.5, top: 9, bottom: -9, near: 1, far: 40 }); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02; sun.shadow.radius = 2.2; scene.add(sun);
     const boom = new THREE.PointLight(0xff8a2a, 0, 6); scene.add(boom);
 
     /* ---------------- cancha: cajón amarillo con greda ---------------- */
@@ -489,10 +491,15 @@
       if (hud) { R.ayuda.textContent = ''; R.ayuda.classList.remove('late'); R.tuto.classList.add('oculto'); }
     }
     function lanzarIA() {
-      const d = opt.demo ? 1 : opt.dif, vivas = mechas.filter(m => m.viva); let tx = 0, ty = 0;
-      if (vivas.length && Math.random() < 0.75) { const m = vivas[Math.floor(Math.random() * vivas.length)]; tx = m.x * 0.9; ty = m.y * 0.9; }
+      const d = opt.demo ? 1 : opt.dif, vivas = mechas.filter(m => m.viva), u = Math.random(); let tx, ty;
+      // cada tiro escoge un plan distinto: una mecha, el bocín o solo arrimarse (no siempre al mismo sitio)
+      if (vivas.length && u < 0.55) { const m = vivas[Math.floor(Math.random() * vivas.length)]; tx = m.x * (0.8 + Math.random() * 0.2); ty = m.y * (0.8 + Math.random() * 0.2); }
+      else if (u < 0.75) { tx = (Math.random() - .5) * 0.08; ty = (Math.random() - .5) * 0.08; }
+      else { const a0 = Math.random() * 6.283, r0 = 0.3 + Math.random() * 0.35; tx = Math.cos(a0) * r0; ty = Math.sin(a0) * r0; }
+      // si la máquina va muy adelante se relaja un poco; si va perdiendo, se concentra
+      const dif = st.pts[1] - st.pts[0], k = opt.demo ? 1 : (dif > 6 ? 1.35 : dif < -6 ? 0.85 : 1), mal = Math.random() < IA_FALLA[d] ? 3.5 : 1;
       const a = apuntarA(tx, ty);
-      lanzar(a.phi + OJ.gauss() * IA_ANG[d], a.s + OJ.gauss() * IA_VEL[d]);
+      lanzar(a.phi + OJ.gauss() * IA_ANG[d] * k * mal, a.s + OJ.gauss() * IA_VEL[d] * k * mal);
     }
     function explotar(m, fuerte) {
       const p = V(0, 0, 0); m.g.getWorldPosition(p); m.viva = false; m.g.visible = false;
@@ -573,7 +580,7 @@
         if (!st.arr) return; st.arr = false;
         if (st.pot < 0.08) { st.pot = 0; guia.forEach(m => { m.visible = false; }); aroCae.material.opacity = 0; if (hud) R.bar.style.width = '0%'; pintar(); return; }
         aprendido++; OJ.store.set('tejo.tiros', aprendido);
-        const v = valores(), e = 0.004 * ((opt.modo === 'ia' ? opt.dif : 1) + 1); lanzar(v.phi + OJ.gauss() * e, v.s + OJ.gauss() * e * 8);
+        const v = valores(), e = 0.003 * ((opt.modo === 'ia' ? opt.dif : 1) + 1); lanzar(v.phi + OJ.gauss() * e, v.s + OJ.gauss() * e * 8);
       }
     };
     /* Para pruebas automáticas: lanza hacia un punto de la greda */
@@ -649,6 +656,17 @@
     game.dispose = function () { if (hud) hud.remove(); if (OJ.input === game.input) OJ.input = null; OJ.liberar(scene); extra.forEach(o => o.dispose()); };
     game.reiniciar = () => OJ.app.jugar('tejo', opt);
 
+    /* Optimización: las sombras solo se calculan para lo que está cerca de la cancha, y lo lejano ni las recibe */
+    scene.updateMatrixWorld(true);
+    const esfera = new THREE.Sphere(), centro = V(0, 0, 0);
+    scene.traverse(o => {
+      if (!o.isMesh || !o.geometry) return;
+      if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+      esfera.copy(o.geometry.boundingSphere).applyMatrix4(o.matrixWorld); centro.copy(esfera.center);
+      const cerca = Math.abs(centro.x) < 6.5 && centro.z > -3.4 && centro.z < 9.5;
+      if (o.castShadow && (!cerca || esfera.radius < 0.045)) o.castShadow = false;
+      if (o.receiveShadow && (centro.z < -6 || Math.abs(centro.x) > 9 || centro.y > 6) && esfera.radius < 30) o.receiveShadow = false;
+    });
     if (!opt.demo) OJ.input = game.input;
     nuevaRonda();
     return game;
