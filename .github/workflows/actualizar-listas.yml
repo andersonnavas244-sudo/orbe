@@ -51,18 +51,22 @@ jobs:
           if [ "$H" = "06" ] || [ "$M" = "workflow_dispatch" ]; then echo "sats=si" >> "$GITHUB_OUTPUT"; else echo "sats=no" >> "$GITHUB_OUTPUT"; fi
 
       - name: Emisoras de radio (Radio Browser)
+        continue-on-error: true   # si la fuente falla, se publica la última lista buena
         if: steps.dia.outputs.listas == 'si'
         run: node RadioOrbe/tools/build-catalog.js
 
       - name: Canales de TV (iptv-org + Free-TV, probando cada señal)
+        continue-on-error: true   # si la fuente falla, se publica la última lista buena
         if: steps.dia.outputs.listas == 'si'
         run: node OrbeTV/tools/build-catalog.js RadioOrbe/app/src/main/assets/www/data/stations.json
 
       - name: Órbitas de satélites (CelesTrak) para Orbe Espacio
+        continue-on-error: true   # si la fuente falla, se publica la última lista buena
         if: steps.dia.outputs.sats == 'si'
         run: node OrbeEspacio/tools/build-sats.js
 
       - name: Mapa mundial del clima (NOAA GFS vía PacIOOS) para Orbe Clima
+        continue-on-error: true   # si la fuente falla, se publica la última lista buena
         run: node OrbeClima/tools/build-grid.js public-grid.json
 
       - name: Preparar archivos
@@ -85,7 +89,7 @@ jobs:
           else
             curl -fsSL "$BASE/espacio/sats.json" -o public/espacio/sats.json || cp OrbeEspacio/app/src/main/assets/www/data/sats.json public/espacio/sats.json
           fi
-          cp public-grid.json public/clima/grid.json
+          if [ -s public-grid.json ]; then cp public-grid.json public/clima/grid.json; else curl -fsSL "$BASE/clima/grid.json" -o public/clima/grid.json || true; fi
           node -e "for (const a of ['radio','tv']) { const d=require('./public/'+a+'/stations.json'); require('fs').writeFileSync('public/'+a+'/version.json', JSON.stringify({generated:d.generated, total:d.rows.length})) }"
 
       - uses: actions/configure-pages@v5

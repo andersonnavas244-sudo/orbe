@@ -26,3 +26,8 @@ tools-diseno/texturas/8k_earth_clouds.jpg
 tools-diseno/texturas/8k_stars_milky_way.jpg
 tools-diseno/ciudades/cities15000.*
 OrbePodcasts/tools/cache/
+
+# Videos publicitarios: temporales y MP4 (pesados; se regeneran con play-store/videos/hacer_videos.py)
+play-store/videos/cache/
+play-store/*/video/*.mp4
+play-store/videos/listos/

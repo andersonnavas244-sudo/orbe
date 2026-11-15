@@ -166,6 +166,8 @@
     c.autoRotate = true; c.autoRotateSpeed = 0.3; c.enableDamping = true; c.dampingFactor = 0.08;
     c.minDistance = 101.5; c.maxDistance = 900;
     c.addEventListener('start', () => { c.autoRotate = false; });
+    // Solo para grabar los videos publicitarios (index.html?captura=1): permite mover la cámara cuadro a cuadro
+    if (/[?&]captura=1/.test(location.search)) window.__orbeGlobe = globe;
     const pov = state.me ? { lat: state.me.lat, lng: state.me.lon, altitude: 1.9 } : { lat: 5, lng: -75, altitude: 2.2 };
     globe.pointOfView(pov);
     window.addEventListener('resize', () => globe.width(innerWidth).height(innerHeight));
