@@ -27,14 +27,14 @@ OUT = os.path.join(HERE, 'juegos')
 AMARILLO, AZUL, ROJO = (252, 209, 22), (0, 56, 147), (206, 17, 38)
 ORO = (255, 211, 77)
 TEXTS = {
-    'menu': ('Tejo, billar, parqués y dominó', 'los juegos de Colombia en 3D'),
+    'menu': ('Los juegos de Colombia', 'tejo, billar, parqués y dominó en 3D'),
+    'tejo-apunta': ('Tejo en 3D', 'jala el dedo, apunta al bocín y suelta'),
     'tejo-mecha': ('¡Revienta la mecha!', 'mano 1 · mecha 3 · embocinada 6 · moñona 9'),
-    'billar-bola8': ('Pool bola 8 y bola 9', 'reta a El Profe o a un amigo'),
-    'billar-taco': ('Carambola y tres bandas', 'como en los billares de Colombia'),
-    'parques-dados': ('Parqués de 2 a 4', 'parqués colombiano o parchís'),
-    'parques-come': ('¡Cómete las fichas!', 'y gana 20 casillas de premio'),
-    'domino-parejas': ('Dominó en parejas', '2 contra 2, todos contra todos o mano a mano'),
-    'domino-mano': ('¡Dominó o tranca!', 'con frases, emojis y sin internet'),
+    'billar-bola8': ('Pool bola 8 y bola 9', 'y también carambola y tres bandas'),
+    'billar-guia': ('Billar con efecto', 'línea de ayuda y El Profe como rival'),
+    'parques': ('Parqués de 2 a 4', 'contra la máquina o con tus amigos'),
+    'domino': ('Dominó en parejas', 'mano a mano o todos contra todos'),
+    'ganaste': ('¡Gana y presume!', 'sin internet y sin registrarte'),
 }
 
 
@@ -164,8 +164,9 @@ def feature():
     W, H = 1024 * S, 500 * S
     img = fondo(W, H, seed=9, franja=(H * 0.80, -12, 15 * S), luces=40)
     shots = dict(capturas())
-    # dos celulares a la derecha: el parqués y el tejo con la mecha
-    for clave, ancho, ang, cx, cy in (('parques-dados', 222 * S, 8, 0.865, 0.53), ('tejo-mecha', 238 * S, -6, 0.665, 0.55)):
+    # tres celulares a la derecha: billar y dominó atrás, el tejo adelante
+    for clave, ancho, ang, cx, cy in (('billar-bola8', 190 * S, -9, 0.625, 0.57), ('domino', 190 * S, 9, 0.935, 0.57),
+                                      ('tejo-apunta', 226 * S, 0, 0.785, 0.55)):
         if clave not in shots:
             continue
         ph = telefono_girado(shots[clave], ancho, ang)
@@ -189,7 +190,7 @@ def feature():
         img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5 * S)))
         ImageDraw.Draw(img).text((x0, y), txt, font=f1, fill=col)
     d = ImageDraw.Draw(img)
-    d.text((x0 + 4 * S, 300 * S), 'Tejo, billar, parqués y dominó', font=texto(30 * S), fill=(236, 228, 255))
+    d.text((x0 + 4 * S, 300 * S), 'Tejo, billar, parqués y dominó', font=texto(28 * S), fill=(236, 228, 255))
     d.text((x0 + 4 * S, 346 * S), 'de 1 a 4 jugadores · sin internet', font=texto(26 * S), fill=(255, 211, 77))
     img.convert('RGB').resize((1024, 500), Image.LANCZOS).save(os.path.join(OUT, 'destacada-1024x500.png'), optimize=True)
     print('  -> juegos/destacada-1024x500.png')

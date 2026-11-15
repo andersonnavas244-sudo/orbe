@@ -13,6 +13,8 @@ MUSICA = {
     'aire': dict(bpm=96, chords=[(-5, 'm'), (-9, 'M'), (-2, 'M'), (-7, 'M')], beat='pop'),
     'oracion': dict(bpm=56, chords=[(-7, 'M9'), (-2, 'M7'), (-4, 'M9'), (-9, 'm7'), (-7, 'M9'), (-5, 'M7'), (-2, 'M9'), (-7, 'M7')], beat='calma'),
     'biblia': dict(bpm=64, chords=[(-7, 'M9'), (-2, 'M7'), (-4, 'M9'), (-9, 'm7')], beat='suave'),
+    # fiesta colombiana: aire de cumbia (bombo en 1 y 3, guacharaca en corcheas y llamador a contratiempo)
+    'fiesta': dict(bpm=100, chords=[(-2, 'M'), (5, 'M'), (-2, 'M'), (-9, 'M'), (-2, 'M'), (5, 'M'), (-9, 'M'), (-2, 'M')], beat='cumbia'),
 }
 
 APPS = {
@@ -167,5 +169,32 @@ APPS = {
                  n='Juega la trivia bíblica de cada día, y reta a tu familia. Además, lee la Biblia completa, ora, y mantén tu racha.'),
             dict(img=None, tag='DESCARGA GRATIS', t='Orbe Biblia', s='Un versículo para cada día.', cta=True,
                  n='Orbe Biblia. La Palabra de Dios, cada día contigo. Descárgala gratis en Google Play.'),
+        ]),
+    'juegos': dict(
+        title='Juegos de Colombia', folder='OrbeJuegos', voz='Pablo', musica='fiesta', color=(252, 209, 22),
+        # sin el globo terráqueo: fondo morado de fiesta con bombillos y la franja tricolor; icono de la ficha
+        icono='juegos/icono-512.png', fondo='juegos',
+        slogan='¡Que empiece la fiesta!',
+        escenas=[
+            dict(img=None, tag='¿TE ACUERDAS?', t='¿Extrañas el tejo?', s='las tardes de juego con los amigos',
+                 n='¿Extrañas una tarde de tejo con los amigos? ¿O el parqués en la casa de la abuela? ¡Ahora lo llevas en el bolsillo!'),
+            dict(img='capturas/telefono-1-menu.png', tag='4 JUEGOS EN 3D', t='Los juegos de Colombia', s='tejo, billar, parqués y dominó',
+                 n='Juegos de Colombia trae cuatro juegos de toda la vida, en 3D: tejo, billar, parqués y dominó. Y sin internet.'),
+            dict(img='capturas/telefono-2-tejo-apunta.png', tag='TEJO 3D', t='Apunta al bocín', s='arrastra el dedo hacia atrás y suelta',
+                 n='En el tejo, arrastra el dedo hacia atrás, apunta al bocín, y suelta.'),
+            dict(img='capturas/telefono-3-tejo-mecha.png', tag='¡PUM!', t='¡Revienta la mecha!', s='mano, mecha, embocinada y moñona',
+                 n='¡Pum! ¡Mecha! Suma con la mano, la mecha, la embocinada y la moñona, como en la cancha del barrio.'),
+            dict(img='capturas/telefono-4-billar-bola8.png', tag='BILLAR 3D', t='Pool bola 8 y bola 9', s='y también carambola y tres bandas',
+                 n='En el billar hay pool bola ocho, bola nueve, carambola libre y tres bandas.'),
+            dict(img='capturas/telefono-5-billar-guia.png', tag='CON EFECTO', t='Reta a El Profe', s='línea de ayuda y efecto en la bola',
+                 n='Usa la línea de ayuda, ponle efecto a la bola, y reta a El Profe. ¡A ver quién manda en la mesa!'),
+            dict(img='capturas/telefono-6-parques.png', tag='PARQUÉS 3D', t='Parqués de 2 a 4', s='contra la máquina o con tus amigos',
+                 n='En el parqués juegan de dos a cuatro, en el mismo celular. Sal con pares, cómete las fichas, y llega al cielo.'),
+            dict(img='capturas/telefono-7-domino.png', tag='DOMINÓ 3D', t='Dominó en parejas', s='mano a mano o todos contra todos',
+                 n='Y en el dominó, juega en parejas, mano a mano, o todos contra todos. ¡Con frases, emojis y hasta tranca!'),
+            dict(img='capturas/telefono-8-ganaste.png', tag='¡GANASTE!', t='¡Gana y presume!', s='comparte el resultado por WhatsApp',
+                 n='Gana la partida y compártela con tus amigos por WhatsApp. Sin cuenta y sin registrarte.'),
+            dict(img=None, tag='DESCARGA GRATIS', t='Juegos de Colombia', s='¡Que empiece la fiesta!', cta=True,
+                 n='Juegos de Colombia. ¡Que empiece la fiesta! Descárgala gratis en Google Play. Busca Juegos de Colombia.'),
         ]),
 }

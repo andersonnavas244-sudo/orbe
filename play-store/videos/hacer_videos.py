@@ -141,15 +141,15 @@ def music(style, total):
                     padR[a:b] += (w * env).astype(np.float32)
         # bajo: raíz grave en los tiempos 1 y 3 (o sostenido en los estilos lentos)
         fb = f0 / 2
-        for j in range(0, 8, 2 if st['beat'] == 'pop' else 4):
+        for j in range(0, 8, 2 if st['beat'] in ('pop', 'cumbia') else 4):
             s0 = int((k * chord_len + j * beat) * SR)
-            ln = int((2 if st['beat'] == 'pop' else 4) * beat * SR)
+            ln = int((2 if st['beat'] in ('pop', 'cumbia') else 4) * beat * SR)
             seg = np.arange(min(ln, n - s0)) / SR
             if s0 >= n:
                 break
-            bass[s0:s0 + len(seg)] += np.sin(2 * np.pi * fb * seg) * np.exp(-seg * (2.2 if st['beat'] == 'pop' else 0.5)) * np.minimum(1, seg / 0.01)
+            bass[s0:s0 + len(seg)] += np.sin(2 * np.pi * fb * seg) * np.exp(-seg * (2.2 if st['beat'] in ('pop', 'cumbia') else 0.5)) * np.minimum(1, seg / 0.01)
         # arpegio brillante (corcheas), alternando izquierda y derecha
-        if st['beat'] in ('pop', 'suave', 'calma'):
+        if st['beat'] in ('pop', 'suave', 'calma', 'cumbia'):
             notes = [f0 * 4 * 2 ** (iv / 12) for iv in INTERVALS[typ]]
             step = beat / 2
             for j in range(16):
@@ -158,7 +158,7 @@ def music(style, total):
                     break
                 fr = notes[(j * 2 + (j // 4)) % len(notes)]
                 seg = np.arange(min(int(1.2 * SR), n - s0)) / SR
-                pl = np.sin(2 * np.pi * fr * seg) * np.exp(-seg * (5 if st['beat'] == 'pop' else 2.5)) * np.minimum(1, seg / 0.004)
+                pl = np.sin(2 * np.pi * fr * seg) * np.exp(-seg * (5 if st['beat'] in ('pop', 'cumbia') else 2.5)) * np.minimum(1, seg / 0.004)
                 arp[j % 2, s0:s0 + len(seg)] += pl.astype(np.float32)
         k += 1
     pad, padR = spectral(pad, lp=2400), spectral(padR, lp=2400)
@@ -205,6 +205,20 @@ def music(style, total):
                 seg = np.arange(int(0.03 * SR)) / SR
                 tick = rng.standard_normal(len(seg)) * np.exp(-seg * 120)
                 hats[s1:s1 + len(seg)] += tick[:max(0, n - s1)] * (0.35 if q == 0 else 0.15)
+        elif st['beat'] == 'cumbia':   # bombo en 1 y 3, guacharaca en corcheas (larga-corta) y llamador a contratiempo
+            if j % 2 == 0:
+                seg = np.arange(int(0.4 * SR)) / SR
+                kick = np.sin(2 * np.pi * (52 * seg + 55 * (1 - np.exp(-seg * 28)) / 28)) * np.exp(-seg * 8)
+                drums[s0:s0 + len(seg)] += kick[:n - s0] * 0.85
+            seg = np.arange(int(0.16 * SR)) / SR      # llamador (tambor seco y agudo) en el contratiempo
+            s1 = int((t0 + 0.5 * beat) * SR)
+            tom = np.sin(2 * np.pi * 190 * seg) * np.exp(-seg * 30) + rng.standard_normal(len(seg)) * np.exp(-seg * 60) * 0.3
+            drums[s1:s1 + len(seg)] += tom[:max(0, n - s1)] * 0.5
+            for q, (ln, amp) in enumerate(((0.22, 0.55), (0.08, 0.3), (0.22, 0.5), (0.08, 0.3))):   # guacharaca
+                s1 = int((t0 + q * beat / 4) * SR)
+                seg = np.arange(int(ln * beat * SR)) / SR
+                rasp = rng.standard_normal(len(seg)) * (0.6 + 0.4 * np.sin(2 * np.pi * 70 * seg)) * np.minimum(1, seg / 0.01) * np.exp(-seg * 14)
+                hats[s1:s1 + len(seg)] += rasp[:max(0, n - s1)] * amp
         elif st['beat'] == 'calma':   # música para orar: sin percusión
             pass
         else:   # suave: solo un shaker
@@ -512,7 +526,8 @@ class Video:
             self.shade_bottom = vertical_shade(0, 0, 235)
             self.vign = red_vignette()
         self.www = os.path.join(gg.ROOT, cfg['folder'], 'app', 'src', 'main', 'assets', 'www')
-        self.icon = Image.open(os.path.join(self.www, 'img', 'icono.png')).convert('RGBA')
+        ico = os.path.join(PS, cfg['icono']) if cfg.get('icono') else os.path.join(self.www, 'img', 'icono.png')
+        self.icon = Image.open(ico).convert('RGBA')
         c = cfg['color']
         self.c1, self.c2 = (c, PINK) if c != PINK else (c, CYAN)
         self.bg = self.backdrop()
@@ -525,6 +540,11 @@ class Video:
             return Image.open(path).convert('RGBA')
         W2, H2 = 1200, 2134
         cx, cy, R = W2 // 2, int(H2 * 1.30), int(W2 * 0.93)
+        if self.cfg.get('fondo') == 'juegos':      # Juegos de Colombia: sin el globo (fondo de fiesta de su ficha)
+            import generar_juegos as gj
+            im = gj.fondo(W2, H2, seed=5, franja=(H2 * 0.90, -12, 30), luces=70).convert('RGB')
+            im.save(path)
+            return im.convert('RGBA')
         if self.key in ('radio', 'tv'):
             canvas, _ = gp.backdrop(self.key, gg.APPS[self.key], W2, H2, cx, cy, R)
         else:

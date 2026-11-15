@@ -64,8 +64,39 @@ python play-store/generar_juegos.py
 
 1. **AdMob:** cambia el ID de prueba del intersticial en `AdsConfig.java` y el de la app en `res/values/strings.xml`.
 2. **Premium:** crea la suscripción `premium_mensual` (9.000 COP/mes) en Play Console.
-3. **Firma:** configura tu propia clave en `app/build.gradle` (no la subas al repositorio).
+3. **Firma y AAB:** sigue los pasos de abajo («Firmar y generar el AAB»).
 4. **Ficha:** textos en `play-store/juegos/ficha.md`; política en `politicas/privacidad-orbe-juegos.md`.
+
+## Firmar y generar el AAB para Play Store
+
+La llave y la contraseña son tuyas y no van en el repositorio: se guardan en `C:\Users\laura\orbe-firma\`
+(`orbe-juegos.jks` y `firma.properties`). `app/build.gradle` lee ese archivo; si no existe, el release se firma con la
+llave de depuración (sirve para probar, no para Play Store).
+
+1. Abre **Git Bash** en la carpeta `C:\Users\laura\Documents\Orbe`.
+2. Corre:
+
+   ```bash
+   bash tools-diseno/firmar-juegos.sh
+   ```
+
+3. La primera vez, **keytool** crea la llave y te pide una contraseña (mínimo 6 caracteres, dos veces) y unos datos
+   (nombre, empresa, ciudad, país `CO`); al final escribe `sí`. Luego el script te pide la misma contraseña (no se ve
+   al escribirla) para guardar `firma.properties`, compila y deja en `OrbeJuegos/dist/`:
+   - `JuegosDeColombia-1.1.aab`: el que se sube a Play Store.
+   - `JuegosDeColombia-1.1-firmada.apk`: para instalar y probar en un celular.
+
+   Al final muestra la huella SHA-256 del certificado.
+4. **Haz copia de la llave** (`orbe-juegos.jks`) y guarda la contraseña en un lugar seguro (USB, nube privada o un
+   gestor de contraseñas). Si las pierdes, no podrás publicar actualizaciones con esa llave.
+5. En [Play Console](https://play.google.com/console): **Juegos de Colombia → Probar y publicar → Producción**
+   (o *Prueba interna* para probar primero) → **Crear versión** → acepta la **firma de apps de Google Play** →
+   **Subir** el `.aab` → notas de la versión → **Revisar versión** → **Enviar a revisión**.
+
+Las siguientes veces el script ya encuentra la llave: responde `N` cuando pregunte si reescribe `firma.properties`.
+En cada actualización sube `versionCode` y `versionName` en `app/build.gradle` antes de correrlo.
+En algunas versiones viejas de Git Bash, keytool muestra la contraseña mientras la escribes: no se guarda en ningún
+lado, pero asegúrate de que nadie esté mirando y al terminar limpia la pantalla con `clear`.
 
 ## Créditos
 

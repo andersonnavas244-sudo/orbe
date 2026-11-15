@@ -2,7 +2,7 @@
  * Capturas reales de Juegos de Colombia para Google Play (teléfono 1080x1920) y miniaturas del menú.
  * Abre el juego directamente desde los archivos (no hace falta servidor) con Chrome + puppeteer-core.
  *   node play-store/capturas_juegos.js <carpeta node_modules con puppeteer-core> [paso]
- * paso: todo (por defecto) | miniaturas | menu | tejo | billar | parques | domino
+ * paso: todo (por defecto) | miniaturas | menu | tejo | billar | parques | domino | ganaste
  * ("todo" hace primero las miniaturas, para que el menú salga con ellas).
  *
  * Genera:
@@ -21,13 +21,14 @@ const OUT = path.join(__dirname, 'juegos', 'capturas');
 const PASO = process.argv[3] || 'todo';
 const hacer = p => PASO === 'todo' || PASO === p;
 const wait = ms => new Promise(r => setTimeout(r, ms));
-const BILLAR_GIRO = +(process.env.GIRO || 0.3), BILLAR_MINI = (process.env.MINI || '55,165,250').split(',').map(Number);
+const BILLAR_GIRO = +(process.env.GIRO || 0.04), BILLAR_MINI = (process.env.MINI || '55,165,250').split(',').map(Number);
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', protocolTimeout: 900000,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--allow-file-access-from-files', '--lang=es-CO'] });
 
+  const js = (p, fn, ...a) => p.evaluate(fn, ...a);
   // Abre el juego en un teléfono de 360x640 (x3 = 1080x1920), sin sonido y con marcadores de ejemplo
   const abrir = async (q, stats) => {
     const p = await b.newPage();
@@ -41,11 +42,13 @@ const BILLAR_GIRO = +(process.env.GIRO || 0.3), BILLAR_MINI = (process.env.MINI 
     }, stats || null);
     await p.goto(BASE + '?captura=1&dpr=3' + q, { waitUntil: 'load', timeout: 300000 });
     await p.waitForFunction(() => window.__listo, { timeout: 300000 });
+    await js(p, () => { OJ.mudo = true; });
     await wait(1200);
+    await js(p, () => document.querySelector('.velo .btn')?.click());
+    await wait(500);
     return p;
   };
-  const js = (p, fn, ...a) => p.evaluate(fn, ...a);
-  const shot = async (p, name) => { await wait(300); await p.screenshot({ path: path.join(OUT, name) }); console.log('  ->', name); };
+    const shot = async (p, name) => { await wait(300); await p.screenshot({ path: path.join(OUT, name) }); console.log('  ->', name); };
   // Miniatura cuadrada 600x600 sin el marcador (se oculta la interfaz); x, y, lado en px de CSS
   const mini = async (p, name, x, y, lado) => {
     await js(p, () => ['ui', 'gran', 'destello'].forEach(id => { document.getElementById(id).style.visibility = 'hidden'; }));
@@ -87,11 +90,10 @@ const BILLAR_GIRO = +(process.env.GIRO || 0.3), BILLAR_MINI = (process.env.MINI 
 
   /* ---------- miniaturas del menú ---------- */
   if (hacer('miniaturas')) {
-    // Tejo: la mecha estallando junto al bocín
-    let p = await abrir('&juego=tejo&modo=2j&meta=27');
-    await js(p, () => { OJ.avanzar(0.5); OJ.juego.probar(0.225, 0); });
-    await explosion(p);
-    await mini(p, 'tejo.jpg', 70, 190, 220);
+    // Tejo: el jugador de espaldas frente a la cancha, listo para lanzar
+    let p = await abrir('&juego=tejo&modo=ia&dif=1&meta=27');
+    await hastaApunta(p); await js(p, () => { OJ.avanzar(0.5); OJ.pausado = true; });
+    await mini(p, 'tejo.jpg', 30, 112, 300);
     await p.close();
     // Billar: el triángulo de pool sobre el paño, vista de la mesa
     p = await abrir('&juego=billar&modo=bola8&rival=2j');
@@ -121,50 +123,64 @@ const BILLAR_GIRO = +(process.env.GIRO || 0.3), BILLAR_MINI = (process.env.MINI 
 
   /* ---------- tejo ---------- */
   if (hacer('tejo')) {
-    const p = await abrir('&juego=tejo&modo=2j&meta=27');
+    // apuntando: el jugador de espaldas, jalando el dedo hacia abajo para dar fuerza
+    let p = await abrir('&juego=tejo&modo=ia&dif=1&meta=27');
+    await hastaApunta(p);
+    await js(p, () => OJ.avanzar(0.5));
+    await p.mouse.move(180, 430); await p.mouse.down();
+    for (let i = 1; i <= 6; i++) { await p.mouse.move(180 + i * 2, 430 + i * 22); await js(p, () => OJ.avanzar(0.08)); }
+    await js(p, () => { OJ.pausado = true; OJ.avanzar(0.05); });
+    await shot(p, 'telefono-2-tejo-apunta.png');
+    await p.close();
+    // ¡Mecha!
+    p = await abrir('&juego=tejo&modo=2j&meta=27');
     await js(p, () => { OJ.avanzar(0.5); OJ.juego.probar(0.225, 0); });
     await explosion(p);
-    await shot(p, 'telefono-2-tejo-mecha.png');
+    await shot(p, 'telefono-3-tejo-mecha.png');
     await p.close();
   }
 
   /* ---------- billar ---------- */
   if (hacer('billar')) {
-    // bola 8 contra El Profe, vista de la mesa
+    // bola 8 contra El Profe, visto desde arriba
     let p = await abrir('&juego=billar&modo=bola8&rival=ia&dif=1');
-    await vista(p, 'mesa'); await js(p, () => OJ.avanzar(2));
-    await shot(p, 'telefono-3-billar-bola8.png');
+    await vista(p, 'arriba'); await js(p, () => OJ.avanzar(2));
+    await shot(p, 'telefono-4-billar-bola8.png');
     await p.close();
-    // tres bandas, vista del taco
-    p = await abrir('&juego=billar&modo=tres&rival=2j&meta=20');
+    // apuntando detrás del taco, con la línea guía
+    p = await abrir('&juego=billar&modo=bola8&rival=ia&dif=1');
     await vista(p, 'taco'); await js(p, g => { OJ.juego.st.ang += g; OJ.avanzar(2); }, BILLAR_GIRO);
-    await shot(p, 'telefono-4-billar-taco.png');
+    await shot(p, 'telefono-5-billar-guia.png');
     await p.close();
   }
 
   /* ---------- parqués ---------- */
   if (hacer('parques')) {
-    let p = await abrir('&juego=parques&modo=ia&n=4&dif=1');
+    const p = await abrir('&juego=parques&modo=ia&n=4&dif=1');
     await parquesArmado(p);
-    await shot(p, 'telefono-5-parques-dados.png');
-    // ¡se la come! la ficha amarilla avanza 4 y cae sobre la verde
-    await js(p, () => { const g = OJ.juego; g.tocarFicha(0); if (g.st.sel) g.elegir(0); for (let i = 0; i < 90 && !document.getElementById('gran').classList.contains('on'); i++) g.update(1 / 60); OJ.avanzar(0.5); });
-    await js(p, () => { const e = document.getElementById('gran'); e.style.transition = 'none'; e.style.opacity = 1; e.style.transform = 'none'; });
-    await shot(p, 'telefono-6-parques-come.png');
+    await shot(p, 'telefono-6-parques.png');
     await p.close();
   }
 
   /* ---------- dominó ---------- */
   if (hacer('domino')) {
-    let p = await abrir('&juego=domino&modo=parejas&dif=1&meta=100');
+    const p = await abrir('&juego=domino&modo=parejas&dif=1&meta=100');
     await dominoArmado(p, 7);
     await js(p, () => { OJ.globo(document.querySelector('.dm-av[data-j="2"]'), '¡Dale, compañero!'); });
-    await shot(p, 'telefono-7-domino-parejas.png');
+    await shot(p, 'telefono-7-domino.png');
     await p.close();
-    p = await abrir('&juego=domino&modo=1v1&dif=1&meta=50');
-    await dominoArmado(p, 6);
-    await js(p, () => { OJ.globo(document.querySelector('.dm-av[data-j="1"]'), '🔥'); });
-    await shot(p, 'telefono-8-domino-mano.png');
+  }
+
+  /* ---------- ¡Ganaste! ---------- */
+  if (hacer('ganaste')) {
+    // tejo contra la máquina a 9: vas 6 y la mecha te da los 3 que faltan
+    const p = await abrir('&juego=tejo&modo=ia&dif=1&meta=9');
+    await hastaApunta(p);
+    await js(p, () => { const g = OJ.juego; g.st.pts[0] = 6; g.st.pts[1] = 4; g.probar(0.225, 0); for (let i = 0; i < 600 && !g.st.fin; i++) g.update(1 / 60); OJ.avanzar(0.2); });
+    await wait(2500);
+    await js(p, () => { OJ.pausado = true; OJ.avanzar(0.05); });
+    await wait(800);
+    await shot(p, 'telefono-8-ganaste.png');
     await p.close();
   }
   console.log('listo');

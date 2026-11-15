@@ -14,6 +14,8 @@ dist/
 *.jks
 *.keystore
 keystore.properties
+firma.properties
+orbe-firma/
 # Varios
 node_modules/
 __pycache__/

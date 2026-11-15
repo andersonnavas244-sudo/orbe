@@ -17,7 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PS = os.path.dirname(HERE)
 LISTOS = os.path.join(HERE, 'listos')
 FF = imageio_ffmpeg.get_ffmpeg_exe()
-APPS = ['sismos', 'radio', 'tv', 'espacio', 'clima', 'podcasts', 'biblia']
+APPS = ['sismos', 'radio', 'tv', 'espacio', 'clima', 'podcasts', 'biblia', 'juegos']
 
 os.makedirs(os.path.join(LISTOS, '4k'), exist_ok=True)
 for key in sys.argv[1:] or APPS:

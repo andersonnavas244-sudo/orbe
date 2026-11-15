@@ -83,6 +83,8 @@ Tejo, billar, parqués y dominó en 3D, con amigos o la máquina y sin internet.
 | `destacada-1024x500.png` | Gráfico de funciones (imagen destacada) |
 | `publicidad/tienda-1..8.png` | Capturas de pantalla del teléfono (con marco y título) |
 | `capturas/telefono-*.png` | Capturas sin marco (alternativa) |
+| `video/orbe-juegos-90s.mp4` | Video promocional (súbelo a YouTube y pega el enlace en la ficha) |
+| `publicidad/facebook-1.png`, `facebook-2.png` | Anuncios de Facebook e Instagram (textos en `play-store/facebook-anuncios.md`) |
 
 Se regeneran con:
 
@@ -90,4 +92,6 @@ Se regeneran con:
 python OrbeJuegos/tools/hacer_icono.py
 node play-store/capturas_juegos.js <carpeta node_modules con puppeteer-core>
 python play-store/generar_juegos.py
+python play-store/generar_facebook.py juegos
+python play-store/videos/hacer_videos.py juegos && python play-store/videos/hacer_4k.py juegos
 ```

@@ -1,6 +1,6 @@
 """Imágenes publicitarias para Facebook e Instagram: 2 por app.
 
-    python play-store/generar_facebook.py [sismos radio tv espacio clima podcasts]
+    python play-store/generar_facebook.py [sismos radio tv espacio clima podcasts biblia juegos]
 
 En play-store/<app>/publicidad/:
   facebook-1.png   1080x1350 (4:5, la que más ocupa en el feed): frase gancho, celular en 3D y 3 beneficios
@@ -60,11 +60,16 @@ ADS = {
                chips=['La Biblia completa sin internet', 'Oraciones y música para orar', 'Versículos para tus estados']),
         b=dict(h='Empieza cada día con fe', shots=['capturas/telefono-2-versiculo.png', 'capturas/telefono-4-tarjetas.png'],
                checks=['Buenos días con Dios para WhatsApp', '¿Cómo te sientes? Versículos para ti', 'Lugares de la Biblia en 3D'])),
+    'juegos': dict(
+        a=dict(h='¿Extrañas una tarde de tejo?', s='Tejo, billar, parqués y dominó en 3D, en tu celular', shot='capturas/telefono-3-tejo-mecha.png',
+               chips=['Contra la máquina o con amigos', 'Funciona sin internet', 'Parqués y dominó de 2 a 4']),
+        b=dict(h='Los juegos de Colombia en 3D', shots=['capturas/telefono-2-tejo-apunta.png', 'capturas/telefono-6-parques.png'],
+               checks=['Tejo con mechas que revientan', 'Pool, carambola y tres bandas', 'Parqués y dominó en parejas'])),
 }
 
 
 def background(key, w, h):
-    """Fondo épico: el globo real de la app (Sismos) o el espacio con la Tierra de la publicidad."""
+    """Fondo épico: el globo real de la app (Sismos), el espacio con la Tierra de la publicidad o, en Juegos de Colombia, la fiesta sin globo."""
     if key == 'sismos':
         clip = os.path.join(hv.CACHE, 'sismos', 'clips', 'llegada')
         frames = sorted(os.listdir(clip)) if os.path.isdir(clip) else []
@@ -88,7 +93,8 @@ def background(key, w, h):
 def brand(key, size=64):
     cfg = APPS[key]
     www = os.path.join(gg.ROOT, cfg['folder'], 'app', 'src', 'main', 'assets', 'www')
-    icon = Image.open(os.path.join(www, 'img', 'icono.png')).convert('RGBA').resize((size, size), Image.LANCZOS)
+    ico = os.path.join(HERE, cfg['icono']) if cfg.get('icono') else os.path.join(www, 'img', 'icono.png')
+    icon = Image.open(ico).convert('RGBA').resize((size, size), Image.LANCZOS)
     txt, pad = hv.plain_text(cfg['title'], gg.font(FB, int(size * 0.62)))
     im = Image.new('RGBA', (size + 16 + txt.size[0], max(size, txt.size[1])))
     im.alpha_composite(icon, (0, (im.size[1] - size) // 2))

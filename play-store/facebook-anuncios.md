@@ -103,6 +103,21 @@ pon **Instalar ahora** como botón. Los textos de abajo ya tienen el largo corre
 
 ---
 
+## Juegos de Colombia
+
+**Texto principal (versión 1):**
+> 🇨🇴 ¿Extrañas una tarde de tejo con los amigos? Revienta la mecha, juega billar, parqués y dominó en 3D. ¡Gratis y sin internet!
+
+**Texto principal (versión 2):**
+> 🎲 El parqués de la casa de la abuela, el dominó en parejas y el pool del barrio, ahora en tu celular. Juega contra la máquina o con tus amigos en el mismo teléfono.
+
+- **Título:** Tejo, billar, parqués y dominó
+- **Descripción:** ¡Que empiece la fiesta!
+- **Público sugerido:** Colombia y colombianos en el exterior (EE. UU., España, Chile) · 18 a 65+ años · intereses: tejo, billar, juegos de mesa, parqués, dominó, Selección Colombia.
+- **Imágenes:** `play-store/juegos/publicidad/facebook-1.png` y `facebook-2.png` · **Video:** `orbe-juegos-90s.mp4`.
+
+---
+
 ## Consejos para que rindan más
 
 1. **Prueba las 2 imágenes** de cada app en el mismo conjunto de anuncios: Facebook le da más presupuesto a la que mejor funcione.
