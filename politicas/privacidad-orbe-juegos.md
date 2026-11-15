@@ -2,18 +2,21 @@
 
 **Última actualización:** 15 de noviembre de 2026
 
-Juegos de Colombia ("la app") tiene dos juegos en 3D: Tejo y Billar (carambola libre y a tres bandas), para jugar
-contra la máquina o con otra persona en el mismo celular. Esta política explica qué datos se usan y por qué.
+Juegos de Colombia ("la app") tiene cuatro juegos en 3D: Tejo, Billar (bola 8, bola 9, carambola libre y tres
+bandas), Parqués y Dominó, para jugar contra la máquina o con otras personas en el mismo celular. Esta política
+explica qué datos se usan y por qué.
 
 ## 1. Datos que se guardan solo en tu teléfono
 
-Tus partidas ganadas y perdidas, las opciones de cada juego (jugadores, dificultad, puntos de la partida, vista de
-la mesa), tus ajustes (sonido y vibración) y si tienes Premium. **No salen de tu teléfono** y se borran al
+Tus partidas ganadas y perdidas, las opciones de cada juego (jugadores, dificultad, reglas, puntos de la partida,
+vista de la mesa), si ya viste la ayuda de cada juego, tus ajustes (sonido y vibración) y si tienes Premium. **No salen de tu teléfono** y se borran al
 desinstalar la app. No pedimos cuenta, nombre, correo ni ningún otro dato personal.
 
 ## 2. Sin internet
 
-Los dos juegos están dentro de la app y funcionan sin conexión. No hay partidas en línea ni chat. La app no usa tu
+Los cuatro juegos están dentro de la app y funcionan sin conexión. No hay partidas en línea ni chat con otras
+personas: las frases rápidas y los emojis del parqués y del dominó solo se muestran en tu pantalla, y los rivales
+de la máquina son personajes inventados. La app no usa tu
 ubicación, tus contactos, tu cámara, tu micrófono ni tus fotos.
 
 ## 3. Compartir
@@ -36,7 +39,8 @@ cancelarla cuando quieras desde Google Play.
 
 ## 6. Permisos
 
-- **Vibración:** vibraciones cortas cuando el tejo cae, revienta una mecha o cuando tacas (se apagan en *Ajustes*).
+- **Vibración:** vibraciones cortas cuando el tejo cae, revienta una mecha, cuando tacas o cuando se comen una ficha
+  (se apagan en *Ajustes*).
 - **Internet:** solo para los anuncios y la suscripción Premium.
 
 ## 7. Niños

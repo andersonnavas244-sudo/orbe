@@ -28,7 +28,7 @@
   OJ.std = o => new THREE.MeshStandardMaterial(o);
   OJ.tex = function (w, h, draw, rx, ry) {
     const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
-    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = OJ.aniso || 4;
     if (rx) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); }
     return t;
   };
@@ -83,6 +83,34 @@
     scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(wire), new THREE.LineBasicMaterial({ color: 0x1a1a1a })));
   };
 
+  /*
+   * Reflejos realistas: arma un "estudio" (cielo en degradado + paneles de luz) y lo convierte en mapa de entorno.
+   * Todos los materiales estándar de la escena lo reflejan (bolas, fichas, metal, barniz).
+   *   OJ.entorno(scene, '#arriba', '#abajo', [{ p: [x, y, z], w, h, c: 0xffffff, f: 4 }, ...])   f = fuerza de la luz
+   */
+  OJ.entorno = function (scene, arriba, abajo, luces) {
+    const s = new THREE.Scene();
+    const fondo = OJ.tex(16, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, arriba); gr.addColorStop(1, abajo); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+    s.add(new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, map: fondo })));
+    (luces || []).forEach(l => {
+      const m = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }); m.color.set(l.c || 0xffffff).multiplyScalar(l.f || 3);
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(l.w, l.h), m); q.position.set(l.p[0], l.p[1], l.p[2]); q.lookAt(0, 0, 0); s.add(q);
+    });
+    const pm = new THREE.PMREMGenerator(OJ.R), rt = pm.fromScene(s, 0.03);
+    scene.environment = rt.texture; scene.userData.envRT = rt; pm.dispose(); OJ.liberar(s);
+  };
+  /* Caja con bordes redondeados (fichas de dominó, dados). Conserva las 6 caras para usar un material por cara. */
+  OJ.cajaRedonda = function (w, h, d, radio, seg) {
+    const g = new THREE.BoxGeometry(w, h, d, seg || 5, seg || 5, seg || 5), pos = g.attributes.position, nor = g.attributes.normal, v = new THREE.Vector3(), c = new THREE.Vector3();
+    const hx = w / 2 - radio, hy = h / 2 - radio, hz = d / 2 - radio;
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i); c.set(Math.max(-hx, Math.min(hx, v.x)), Math.max(-hy, Math.min(hy, v.y)), Math.max(-hz, Math.min(hz, v.z)));
+      v.sub(c); if (v.lengthSq() < 1e-12) v.fromBufferAttribute(nor, i); v.normalize();
+      nor.setXYZ(i, v.x, v.y, v.z); pos.setXYZ(i, c.x + v.x * radio, c.y + v.y * radio, c.z + v.z * radio);
+    }
+    return g;
+  };
+
   /* ---------- partículas (chispas) ---------- */
   OJ.Chispas = function (scene, n, color, size) {
     this.n = n; this.pos = new Float32Array(n * 3); this.vel = new Float32Array(n * 3); this.vida = 0; this.dur = 1;
@@ -112,7 +140,9 @@
   /* ---------- render y bucle ---------- */
   const cv = document.getElementById('c');
   const R = OJ.R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: Q.has('captura') });
-  R.setPixelRatio(Math.min(window.devicePixelRatio || 1, +Q.get('dpr') || 2));
+  let pr = Math.min(window.devicePixelRatio || 1, +Q.get('dpr') || OJ.store.get('pr3', 3));      // Ultra HD: usa toda la resolución de la pantalla
+  OJ.aniso = Math.min(16, R.capabilities.getMaxAnisotropy());
+  R.setPixelRatio(pr);
   R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
   R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping;
   let cur = null, last = 0;
@@ -128,16 +158,27 @@
       ms.forEach(m => { if (m.map && !m.map._fija) m.map.dispose(); m.dispose(); });
     });
     if (scene.background && scene.background.isTexture) scene.background.dispose();
+    if (scene.userData.envRT) { scene.userData.envRT.dispose(); scene.userData.envRT = null; scene.environment = null; }
   };
   OJ.setGame = function (g) {
     if (cur && cur.dispose) cur.dispose();
     cur = g; OJ.juego = g;
     if (g) { R.toneMappingExposure = g.exposure || 1; resize(); }
   };
+  /* Calidad automática: si el celular va lento, baja la resolución (y luego las sombras) para que no se trabe */
+  let lento = 0;
+  function medir(real) {
+    if (real > 0.5 || Q.has('dpr')) return;
+    if (real > 0.036) lento += real; else lento = Math.max(0, lento - real * 0.6);
+    if (lento < 2.2) return;
+    lento = 0;
+    if (pr > 1) { pr = Math.max(1, pr - 0.5); R.setPixelRatio(pr); OJ.store.set('pr3', pr); resize(); }
+    else if (R.shadowMap.enabled) { R.shadowMap.enabled = false; if (cur) cur.scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); }
+  }
   function frame(t) {
     requestAnimationFrame(frame);
-    const dt = Math.min((t - last) / 1000, 0.05); last = t;
-    if (cur && !OJ.pausado) { cur.update(dt); R.render(cur.scene, cur.cam); }
+    const real = (t - last) / 1000, dt = Math.min(real, 0.05); last = t;
+    if (cur && !OJ.pausado) { cur.update(dt); R.render(cur.scene, cur.cam); medir(real); }
   }
   /* Para pruebas: adelanta el juego sin esperar al reloj */
   OJ.avanzar = function (seg) { const n = Math.round(seg * 60); for (let i = 0; i < n && cur; i++) cur.update(1 / 60); if (cur) R.render(cur.scene, cur.cam); };
@@ -197,7 +238,11 @@
     punto() { [523, 659, 784, 1047].forEach((f, i) => tono(f, f, .16, .2, 'triangle', i * .08)); },
     gana() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tono(f, f, .2, .22, 'triangle', i * .11)); ruido(1.6, .12, 2500, .5, 'bandpass', 3500, .2); },
     pierde() { [392, 349, 311, 262].forEach((f, i) => tono(f, f * .97, .26, .18, 'sine', i * .16)); },
-    falla() { tono(260, 180, .2, .14, 'sine'); }
+    falla() { tono(260, 180, .2, .14, 'sine'); },
+    tronera() { tono(150, 60, .22, .5, 'sine'); ruido(.12, .25, 700, 1, 'lowpass'); },
+    dado() { for (let i = 0; i < 5; i++) ruido(.03, .22, 2500 + Math.random() * 1500, 2, 'bandpass', 0, i * .07 + Math.random() * .02); },
+    ficha() { tono(520, 300, .07, .25, 'triangle'); ruido(.03, .2, 1800, 1, 'bandpass'); },
+    come() { tono(300, 90, .25, .4, 'sawtooth'); ruido(.2, .3, 900, 1, 'lowpass'); }
   };
   OJ.vib = function (ms) {
     if (!OJ.cfg.vibrar) return;

@@ -1,5 +1,5 @@
 /*
- * Juegos de Colombia — menú, opciones de partida, pausa, final, ajustes y puente con Android.
+ * Juegos de Colombia — menú (tejo, billar, parqués y dominó), opciones de partida, pausa, final, ajustes y puente con Android.
  * Puente nativo (window.AndroidJuegos, opcional): adBreak(), share(texto), openUrl(url), buyPremium(),
  * manageSubscription(), isPremium(), vibrate(ms). Android llama a onNativePremium(bool, precio), orbeToast(msg) y orbeBack().
  */
@@ -12,8 +12,23 @@
   try { app.premium = !!(N && N.isPremium && N.isPremium()); } catch (e) { /* */ }
   window.onNativePremium = function (p, precio) { app.premium = !!p; if (precio) app.precio = precio; if (app.pantalla === 'inicio') inicio(); };
 
-  const stats = store.get('stats', { tejo: { g: 0, p: 0 }, billar: { g: 0, p: 0 } });
-  const prefs = store.get('prefs', { tejo: { modo: 'ia', dif: 1, meta: 27 }, billar: { modo: 'libre', rival: 'ia', dif: 1, meta: 10 } });
+  const REGLAS_BILLAR = {
+    bola8: '<b>Bola 8</b> · mete tus 7 bolas: lisas (1 a 7) o rayadas (9 a 15), según la primera que metas. Al final mete la <b>negra</b> y ganas.<br><b>Falta</b>: meter la blanca, no tocar bola o pegarle primero a una que no es tuya. Si metes la negra antes de tiempo, pierdes.',
+    bola9: '<b>Bola 9</b> · pégale siempre primero a la bola más baja de la mesa. Gana quien meta la <b>9</b>, aunque sea de rebote.<br><b>Falta</b>: meter la blanca o no pegarle primero a la más baja. Pasa el turno.',
+    libre: '<b>Carambola libre</b> · tu bola debe tocar las otras dos. Cada carambola vale un punto y sigues tacando.',
+    tres: '<b>Tres bandas</b> · tu bola toca las otras dos y, antes de la segunda, pega en <b>3 bandas o más</b>. Cada carambola vale un punto y sigues tacando.'
+  };
+  const stats = Object.assign({ tejo: { g: 0, p: 0 }, billar: { g: 0, p: 0 }, parques: { g: 0, p: 0 }, domino: { g: 0, p: 0 } }, store.get('stats', {}));
+  const prefs = store.get('prefs', { v: 2, tejo: { modo: 'ia', dif: 1, meta: 27 }, billar: { modo: 'bola8', rival: 'ia', dif: 1, meta: 10 } });
+  if (!prefs.parques) prefs.parques = { modo: 'ia', n: 4, dif: 1, reglas: 'colombiano' };
+  if (!prefs.parques.reglas) prefs.parques.reglas = 'colombiano';
+  if (!prefs.domino) prefs.domino = { modo: '1v1', dif: 1, meta: 100 };
+  if (!prefs.domino.modo) prefs.domino.modo = prefs.domino.n === 4 ? 'todos' : '1v1';
+  if (!(prefs.v >= 2)) { prefs.v = 2; prefs.billar.modo = 'bola8'; }      // llegaron bola 8 y bola 9: se estrenan con el pool
+  if (!REGLAS_BILLAR[prefs.billar.modo]) prefs.billar.modo = 'bola8';
+  const JUEGOS = [['tejo', 'Tejo', 'Revienta las mechas', 'Mecha · Moñona'], ['billar', 'Billar', 'Pool y carambola', 'Bola 8 · Bola 9 · 3 bandas'],
+    ['parques', 'Parqués', 'De 2 a 4 jugadores', 'Pares · Cárcel · Cielo'], ['domino', 'Dominó', 'Doble seis', 'Dominó · Tranca']];
+  const NOMBRE_J = { tejo: 'Tejo 3D', billar: 'Billar 3D', parques: 'Parqués 3D', domino: 'Dominó 3D' };
   let hoja = null;
   function cerrarHoja() { if (hoja) { hoja.remove(); hoja = null; } OJ.pausado = false; }
   function abrirHoja(html, centro) {
@@ -30,12 +45,10 @@
     const h = el('div', 'home', `
       <div class="franja"><i></i><i></i><i></i></div>
       <div class="logo">Juegos de <b>Colombia</b></div>
-      <div class="lema">Tejo y billar en 3D, para jugar con amigos</div>
-      <div class="cards">
-        <button class="card tejo" data-j="tejo"><div class="card-img" style="background-image:url(img/tejo.jpg)"></div>
-          <div class="card-b"><div class="card-t">Tejo 3D</div><div class="card-s">Lanza el tejo y revienta las mechas</div><div class="card-e">${stats.tejo.g ? 'Ganadas: ' + stats.tejo.g : 'Mano · Mecha · Embocinada · Moñona'}</div></div><div class="card-go">▶</div></button>
-        <button class="card billar" data-j="billar"><div class="card-img" style="background-image:url(img/billar.jpg)"></div>
-          <div class="card-b"><div class="card-t">Billar 3D</div><div class="card-s">Carambola libre y a tres bandas</div><div class="card-e">${stats.billar.g ? 'Ganadas: ' + stats.billar.g : 'Con efecto, bandas y El Profe'}</div></div><div class="card-go">▶</div></button>
+      <div class="lema">Tejo, billar, parqués y dominó en 3D</div>
+      <div class="cards">${JUEGOS.map(x => `
+        <button class="card ${x[0]}" data-j="${x[0]}"><div class="card-img" style="background-image:url(img/${x[0]}.jpg)"></div>
+          <div class="card-b"><div class="card-t">${x[1]}</div><div class="card-s">${x[2]}</div><div class="card-e">${stats[x[0]].g ? '🏆 Ganadas: ' + stats[x[0]].g : x[3]}</div></div></button>`).join('')}
       </div>
       <div class="home-bot"><button data-a="ajustes">⚙ Ajustes</button>${app.premium ? '' : '<button class="oro" data-a="premium">★ Sin anuncios</button>'}</div>`);
     OJ.ui.appendChild(h);
@@ -47,7 +60,7 @@
 
   /* ---------------- opciones de partida ---------------- */
   function segmento(titulo, clave, ops, val) {
-    return `<h3>${titulo}</h3><div class="seg" data-k="${clave}">` + ops.map(o => `<button data-v="${o[0]}" class="${String(o[0]) === String(val) ? 'on' : ''}">${o[1]}${o[2] ? '<small>' + o[2] + '</small>' : ''}</button>`).join('') + '</div>';
+    return (titulo ? `<h3>${titulo}</h3>` : '') + `<div class="seg" data-k="${clave}">` + ops.map(o => `<button data-v="${o[0]}" class="${String(o[0]) === String(val) ? 'on' : ''}">${o[1]}${o[2] ? '<small>' + o[2] + '</small>' : ''}</button>`).join('') + '</div>';
   }
   function opciones(j) {
     const p = prefs[j];
@@ -57,19 +70,41 @@
       ${segmento('Jugadores', 'modo', [['ia', '1 jugador', 'contra la máquina'], ['2j', '2 jugadores', 'en el mismo celular']], p.modo)}
       ${segmento('Dificultad', 'dif', [[0, 'Fácil'], [1, 'Normal'], [2, 'Difícil']], p.dif)}
       ${segmento('Partida a', 'meta', [[9, '9', 'rápida'], [15, '15'], [27, '27', 'tradicional']], p.meta)}
+      <button class="btn" data-x="jugar">Jugar</button>` : j === 'parques' ? `
+      <h2>Parqués 3D</h2>
+      <div class="reglas">Cada dado mueve por separado · cae sobre un rival fuera de seguro y <b>te lo comes</b> (+20) · al cielo +10 · dos fichas iguales hacen <b>barrera</b> · lleva tus 4 fichas al <b>cielo</b>.</div>
+      ${segmento('Modo', 'modo', [['ia', 'Contra la máquina', 'tú eres amarillo'], ['local', 'Con amigos', 'en el mismo celular']], p.modo)}
+      ${segmento('Jugadores', 'n', [[2, '2'], [3, '3'], [4, '4']], p.n)}
+      ${segmento('Reglas', 'reglas', [['colombiano', 'Parqués', 'sales con pares'], ['parchis', 'Parchís', 'sales con un 5']], p.reglas)}
+      <div data-r="dif">${segmento('Dificultad', 'dif', [[0, 'Fácil'], [1, 'Normal'], [2, 'Difícil']], p.dif)}</div>
+      <button class="btn" data-x="jugar">Jugar</button>` : j === 'domino' ? `
+      <h2>Dominó 3D</h2>
+      <div class="reglas">Doble seis · pon una ficha que case con una punta · gana la mano quien se quede sin fichas (<b>¡dominó!</b>) o quien sume menos si se <b>tranca</b>, y se lleva los puntos de los demás.</div>
+      ${segmento('Modo', 'modo', [['1v1', '1 contra 1', 'con pozo'], ['parejas', 'Parejas', '2 contra 2'], ['todos', 'Todos', '4 jugadores']], p.modo)}
+      ${segmento('Dificultad', 'dif', [[0, 'Fácil'], [1, 'Normal'], [2, 'Difícil']], p.dif)}
+      ${segmento('Partida a', 'meta', [[50, '50', 'rápida'], [100, '100', 'tradicional']], p.meta)}
       <button class="btn" data-x="jugar">Jugar</button>` : `
-      <h2>Billar 3D</h2><p>Carambola en mesa sin troneras, como en los billares de Colombia.</p>
-      <div class="reglas"><b>Libre</b> · tu bola debe tocar las otras dos<br><b>Tres bandas</b> · además toca 3 bandas antes de la segunda bola<br>Si haces carambola, sigues tacando.</div>
-      ${segmento('Juego', 'modo', [['libre', 'Carambola libre', 'para empezar'], ['tres', 'Tres bandas', 'el clásico']], p.modo)}
+      <h2>Billar 3D</h2>
+      <h3>Juego</h3>
+      <div class="juegos">${segmento('', 'modo', [['bola8', 'Bola 8', 'pool clásico'], ['bola9', 'Bola 9', 'rápido']], p.modo)}
+      ${segmento('', 'modo', [['libre', 'Carambola libre', 'sin troneras'], ['tres', 'Tres bandas', 'para expertos']], p.modo)}</div>
+      <div class="reglas" data-r="reglas">${REGLAS_BILLAR[p.modo]}</div>
       ${segmento('Jugadores', 'rival', [['ia', '1 jugador', 'contra El Profe'], ['2j', '2 jugadores', 'en el mismo celular']], p.rival)}
       ${segmento('Dificultad', 'dif', [[0, 'Fácil'], [1, 'Normal'], [2, 'Difícil']], p.dif)}
-      ${segmento('Partida a', 'meta', [[5, '5'], [10, '10'], [20, '20']], p.meta)}
+      <div data-r="meta">${segmento('Partida a', 'meta', [[5, '5 puntos'], [10, '10 puntos'], [20, '20 puntos']], p.meta)}</div>
       <button class="btn verde" data-x="jugar">Jugar</button>`;
     const v = abrirHoja(html + '<button class="btn gris" data-x="cerrar">Volver</button>');
+    const reglas = v.querySelector('[data-r="reglas"]'), meta = v.querySelector('[data-r="meta"]');
+    const verModo = () => {
+      if (j === 'parques') v.querySelector('[data-r="dif"]').classList.toggle('oculto', p.modo === 'local');
+      if (j !== 'billar') return; reglas.innerHTML = REGLAS_BILLAR[p.modo]; meta.classList.toggle('oculto', p.modo === 'bola8' || p.modo === 'bola9'); };
+    verModo();
     v.querySelectorAll('.seg button').forEach(b => {
       b.onclick = () => {
         const k = b.parentNode.dataset.k, val = b.dataset.v; p[k] = /^\d+$/.test(val) ? +val : val;
-        b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); store.set('prefs', prefs); OJ.snd.toque();
+        // una misma opción puede estar repartida en varias filas (los 4 juegos del billar): se limpian todas
+        v.querySelectorAll('.seg[data-k="' + k + '"] button').forEach(x => x.classList.toggle('on', x === b)); store.set('prefs', prefs); OJ.snd.toque();
+        if (k === 'modo') verModo();
       };
     });
     v.querySelector('[data-x="jugar"]').onclick = () => app.jugar(j, Object.assign({}, p));
@@ -79,7 +114,7 @@
   app.opciones = opciones;
   app.jugar = function (j, opt) {
     limpiar(); app.pantalla = j; OJ.audio();
-    OJ.setGame(j === 'tejo' ? OJ.Tejo(opt) : OJ.Billar(opt));
+    OJ.setGame(j === 'tejo' ? OJ.Tejo(opt) : j === 'parques' ? OJ.Parques(opt) : j === 'domino' ? OJ.Domino(opt) : OJ.Billar(opt));
   };
 
   /* ---------------- pausa ---------------- */
@@ -104,18 +139,30 @@
   /* ---------------- final de partida ---------------- */
   app.final = function (r) {
     if (r.gano != null) { const s = stats[r.juego]; r.gano ? s.g++ : s.p++; store.set('stats', stats); }
-    const m = r.marcador;
+    const JN = { bola8: 'Bola 8', bola9: 'Bola 9', libre: 'Carambola libre', tres: 'Tres bandas' }, juegoN = r.juego === 'billar' ? JN[r.opt.modo] || '' : '';
+    let marc, resumen;
+    if (r.filas) {        // parqués y dominó: de 2 a 4 jugadores en lista
+      marc = '<div class="final-l">' + r.filas.map(f => `<div class="${f.gana ? 'gana' : ''}">${f.cara ? OJ.avatar(f.cara, f.color, 'chico') : '<i style="background:' + f.color + '"></i>'}<span>${f.nombre}</span><b>${f.valor}</b>${f.gana ? '<em>🏆</em>' : ''}</div>`).join('') + '</div>';
+      resumen = r.resumen || r.titulo;
+    } else {
+      const m = r.marcador, num = typeof m[0][1] === 'number';      // en pool llega [[nombre,'🏆'],[nombre,'–']]
+      const lado = x => `<div class="${!num && x[1] !== '🏆' ? 'pierde' : ''}">${x[1]}<small>${x[0]}</small></div>`;
+      const quien = m[0][1] === '🏆' ? m[0][0] : m[1][0];
+      resumen = num ? m[0][0] + ' ' + m[0][1] + ' – ' + m[1][1] + ' ' + m[1][0] : (quien === 'Tú' ? '¡Gané una partida de ' + juegoN + '!' : 'Ganó ' + quien + ' una partida de ' + juegoN);
+      marc = `<div class="final-m${num ? '' : ' pool'}">${lado(m[0])}<div class="sep">${num ? '–' : 'vs'}</div>${lado(m[1])}</div>`;
+    }
+    const ICONO = { tejo: '🎯', billar: '🎱', parques: '🎲', domino: '👏' };
     setTimeout(() => {
-      const v = abrirHoja(`<div class="centro-t"><div class="final-copa">${r.gano === false ? '🎯' : '🏆'}</div><h2>${r.titulo}</h2>
-        <div class="final-m"><div>${m[0][1]}<small>${m[0][0]}</small></div><div style="opacity:.5">–</div><div>${m[1][1]}<small>${m[1][0]}</small></div></div></div>
+      const v = abrirHoja(`<div class="centro-t"><div class="final-copa">${r.gano === false ? ICONO[r.juego] : '🏆'}</div><h2>${r.titulo}</h2>${juegoN ? '<div class="final-j">' + juegoN + '</div>' : ''}
+        ${marc}</div>
         <button class="btn ${r.juego === 'billar' ? 'verde' : ''}" data-x="otra">Revancha</button>
         <button class="btn gris" data-x="compartir">Compartir resultado</button>
         <button class="btn gris" data-x="salir">Menú</button>`, true);
       v.querySelector('[data-x="otra"]').onclick = () => { cerrarHoja(); anuncio(); app.jugar(r.juego, r.opt); };
       v.querySelector('[data-x="salir"]').onclick = () => { cerrarHoja(); anuncio(); inicio(); };
       v.querySelector('[data-x="compartir"]').onclick = () => {
-        const t = (r.juego === 'tejo' ? '🎯 Tejo 3D' : '🎱 Billar 3D') + ' · ' + m[0][0] + ' ' + m[0][1] + ' – ' + m[1][1] + ' ' + m[1][0] + '\nJuega tejo y billar colombianos en tu celular: Juegos de Colombia';
-        try { if (N && N.share) N.share(t); else if (navigator.share) navigator.share({ text: t }); else OJ.toast('Resultado: ' + m[0][1] + ' – ' + m[1][1]); } catch (e) { /* */ }
+        const t = ICONO[r.juego] + ' ' + NOMBRE_J[r.juego] + ' · ' + resumen + '\nJuega tejo, billar, parqués y dominó en tu celular: Juegos de Colombia';
+        try { if (N && N.share) N.share(t); else if (navigator.share) navigator.share({ text: t }); else OJ.toast(resumen); } catch (e) { /* */ }
       };
     }, 1300);
   };
@@ -127,8 +174,8 @@
     const v = abrirHoja(`<h2>Ajustes</h2>
       <div class="opc"><span>Sonido</span><button class="sw ${OJ.cfg.sonido ? 'on' : ''}" data-c="sonido" aria-label="Sonido"></button></div>
       <div class="opc"><span>Vibración</span><button class="sw ${OJ.cfg.vibrar ? 'on' : ''}" data-c="vibrar" aria-label="Vibración"></button></div>
-      <div class="opc"><span>Tejo: ganadas ${stats.tejo.g} · perdidas ${stats.tejo.p}</span></div>
-      <div class="opc"><span>Billar: ganadas ${stats.billar.g} · perdidas ${stats.billar.p}</span></div>
+      <h3>Tus partidas contra la máquina</h3>
+      <div class="estad">${JUEGOS.map(x => `<div><span>${x[1]}</span><b>${stats[x[0]].g}</b><small>ganadas</small><b>${stats[x[0]].p}</b><small>perdidas</small></div>`).join('')}</div>
       ${app.premium ? '<button class="btn gris" data-x="sub">Administrar suscripción</button>' : '<button class="btn" data-x="premium">★ Quitar anuncios</button>'}
       <button class="btn gris" data-x="politica">Política de privacidad</button>
       <button class="btn gris" data-x="cerrar">Cerrar</button>`);
@@ -160,10 +207,11 @@
   function arrancar() {
     OJ.iniciar();
     const q = OJ.Q.get('juego');
-    if (q === 'tejo' || q === 'billar') {
+    if (prefs[q] && NOMBRE_J[q]) {
       const o = Object.assign({}, prefs[q]);
-      ['modo', 'rival'].forEach(k => { if (OJ.Q.get(k)) o[k] = OJ.Q.get(k); });
-      ['dif', 'meta'].forEach(k => { if (OJ.Q.get(k)) o[k] = +OJ.Q.get(k); });
+      ['modo', 'rival', 'reglas'].forEach(k => { if (OJ.Q.get(k)) o[k] = OJ.Q.get(k); });
+      ['dif', 'meta', 'n'].forEach(k => { if (OJ.Q.get(k)) o[k] = +OJ.Q.get(k); });
+      if (OJ.Q.has('demo')) o.demo = true;
       app.jugar(q, o);
     } else inicio();
     const s = document.getElementById('splash'); s.classList.add('fuera'); setTimeout(() => s.remove(), 600);

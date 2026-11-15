@@ -16,6 +16,7 @@ import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -34,9 +35,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Pantalla principal de Juegos de Colombia: WebView (assets/www) con el Tejo 3D y el Billar 3D,
+ * Pantalla principal de Juegos de Colombia: WebView (assets/www) con tejo, billar, parqués y dominó en 3D,
  * y el puente "AndroidJuegos" hacia lo nativo: anuncios entre partidas, compartir, vibrar y Premium.
- * Solo vertical y con la pantalla encendida mientras la app está abierta.
+ * Solo vertical, a pantalla completa (las barras del sistema se ocultan y vuelven deslizando desde el borde)
+ * y con la pantalla encendida mientras la app está abierta.
  */
 public class MainActivity extends Activity {
 
@@ -55,24 +57,33 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         // Mientras se juega la pantalla no se apaga.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Pantalla completa también junto a la cámara frontal (el juego usa toda la pantalla).
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(BG);
         web = new WebView(this);
         web.setBackgroundColor(BG);
         root.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(root);
+        // Solo se deja margen para el recorte de la cámara: las barras del sistema van ocultas y, cuando el jugador
+        // las saca deslizando, aparecen por encima un momento sin mover el juego.
         root.setOnApplyWindowInsetsListener((View v, WindowInsets insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
-                Insets i = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                Insets i = insets.getInsets(WindowInsets.Type.displayCutout());
                 v.setPadding(i.left, i.top, i.right, i.bottom);
-            } else {
-                v.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
-                        insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
-            }
+            } else if (Build.VERSION.SDK_INT >= 28 && insets.getDisplayCutout() != null) {
+                android.view.DisplayCutout c = insets.getDisplayCutout();
+                v.setPadding(c.getSafeInsetLeft(), c.getSafeInsetTop(), c.getSafeInsetRight(), c.getSafeInsetBottom());
+            } else v.setPadding(0, 0, 0, 0);
             return insets;
         });
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
+        pantallaCompleta();
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -116,6 +127,29 @@ public class MainActivity extends Activity {
             @Override public void onMessage(String msg) { js("window.orbeToast && orbeToast(" + JSONObject.quote(msg) + ")"); }
         });
         billing.start();
+    }
+
+    /** Modo inmersivo: oculta la barra de estado y la de navegación; vuelven un momento al deslizar desde el borde. */
+    @SuppressWarnings("deprecation")
+    private void pantallaCompleta() {
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+            WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                c.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                c.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) pantallaCompleta();      // al volver de un anuncio, de compartir o de otra app
     }
 
     private void js(String code) {
@@ -198,7 +232,7 @@ public class MainActivity extends Activity {
     }
 
     // Sin pauseTimers(): pausaría también el WebView del anuncio a pantalla completa. La web se pausa sola (visibilitychange).
-    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
+    @Override protected void onResume() { super.onResume(); pantallaCompleta(); if (web != null) web.onResume(); }
     @Override protected void onPause() { if (web != null) web.onPause(); super.onPause(); }
 
     @Override
