@@ -61,25 +61,39 @@
   // =====================================================================
   //  Planeta 3D al amanecer
   // =====================================================================
-  let globe, cuadro = { globo: { x: 0.824, y: 0.8473, r: 0.1251 }, ratio: 1.4713 }, heroBox = null;
+  // cuadro.img: imagen de fondo (Jesús sosteniendo el mundo) y dónde va el planeta en ella.
+  // Sin imagen, el planeta se muestra grande, al centro, con la luz dorada del amanecer.
+  let globe, cuadro = { img: null }, heroBox = null;
   // Coloca el cuadro y el planeta: el cuadro ocupa el ancho de la pantalla (debajo de la cabecera)
   // y el globo 3D queda exactamente sobre la esfera de cristal que Jesús sostiene.
   function layoutHero() {
     const top = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0) + 62;
-    // que la mano de Jesús (al 97 % del alto del cuadro) quede por encima de la barra de pestañas
     const maxH = innerHeight - 66 - top - 12;
-    let w = Math.min(innerWidth, 620), h = w * cuadro.ratio;
-    if (h > maxH) { h = maxH; w = h / cuadro.ratio; }
+    let w, h, g;
+    const pic = $('#cuadro');
+    if (cuadro.img) {
+      // que las manos (abajo del cuadro) queden por encima de la barra de pestañas
+      w = Math.min(innerWidth, 620); h = w * cuadro.ratio;
+      if (h > maxH) { h = maxH; w = h / cuadro.ratio; }
+      g = cuadro.globo;
+      if (pic.getAttribute('src') !== cuadro.img) pic.src = cuadro.img;
+      pic.hidden = false;
+    } else {
+      w = innerWidth; h = Math.min(maxH, innerWidth * 1.25);
+      g = { x: 0.5, y: 0.47, r: Math.min(0.36, (h * 0.34) / w) };
+      pic.hidden = true;
+    }
     const x = (innerWidth - w) / 2;
     const hero = $('#hero');
     Object.assign(hero.style, { left: x + 'px', top: top + 'px', width: w + 'px', height: h + 'px' });
-    const g = cuadro.globo, r = g.r * w, S = Math.round(r * 2.7);
+    const r = g.r * w, S = Math.round(r * 2.7);
     const cx = g.x * w, cy = g.y * h;
     Object.assign($('#globe').style, { left: (cx - S / 2) + 'px', top: (cy - S / 2) + 'px', width: S + 'px', height: S + 'px' });
     Object.assign($('#sheen').style, { left: (cx - r) + 'px', top: (cy - r) + 'px', width: 2 * r + 'px', height: 2 * r + 'px' });
     const hr = r * 3.2;
     Object.assign($('#halo').style, { left: (cx - hr) + 'px', top: (cy - hr) + 'px', width: 2 * hr + 'px', height: 2 * hr + 'px' });
-    heroBox = { x, top, w, h, r, S };
+    heroBox = { x, top, w, h, r, S, g };
+    document.body.classList.toggle('con-cuadro', !!cuadro.img);
     document.documentElement.style.setProperty('--hero-pad', Math.max(200, top + h - 74 - 10) + 'px');
     if (globe) {
       globe.width(S).height(S);
@@ -343,14 +357,21 @@
     const ctx = cv.getContext('2d');
     ctx.fillStyle = '#05060d'; ctx.fillRect(0, 0, W, H);
     // Jesús sosteniendo el planeta (el cuadro arriba y el globo tal como se ve ahora en su mano)
-    const ph = 1220, pw = ph / cuadro.ratio, px = (W - pw) / 2;
+    const ph = 1220, pw = cuadro.img ? ph / cuadro.ratio : W, px = (W - pw) / 2;
     try {
-      const pic = await loadImg('img/salvator.jpg');
-      ctx.drawImage(pic, px, 0, pw, ph);
       const gc = globe && globe.renderer().domElement;
+      if (cuadro.img) {
+        ctx.drawImage(await loadImg(cuadro.img), px, 0, pw, ph);
+      } else {
+        // luz dorada del amanecer detrás del planeta
+        const lg = ctx.createRadialGradient(W / 2, 560, 40, W / 2, 560, 760);
+        lg.addColorStop(0, 'rgba(255,205,125,.55)'); lg.addColorStop(0.45, 'rgba(255,170,90,.18)'); lg.addColorStop(1, 'rgba(255,170,90,0)');
+        ctx.fillStyle = lg; ctx.fillRect(0, 0, W, ph);
+      }
       if (gc && gc.width && heroBox) {
-        const g = cuadro.globo, size = heroBox.S * pw / heroBox.w;
-        ctx.drawImage(gc, px + g.x * pw - size / 2, g.y * ph - size / 2, size, size);
+        const g = heroBox.g, size = heroBox.S * pw / heroBox.w;
+        const gy = cuadro.img ? g.y * ph : 560;
+        ctx.drawImage(gc, px + g.x * pw - size / 2, gy - size / 2, size, size);
       }
       const side = ctx.createLinearGradient(0, 0, W, 0);
       side.addColorStop(0, 'rgba(5,6,13,1)'); side.addColorStop(px / W + 0.06, 'rgba(5,6,13,0)');
