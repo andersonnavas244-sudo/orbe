@@ -100,7 +100,6 @@ pon **Instalar ahora** como botón. Los textos de abajo ya tienen el largo corre
 - **Título:** La Biblia completa, gratis
 - **Descripción:** Un versículo para cada día
 - **Público sugerido:** Latinoamérica y latinos en EE. UU. · 18 a 65+ años · intereses: Biblia, cristianismo, iglesia, oración, música cristiana.
-- **Nota:** la imagen es el «Salvator Mundi» de Leonardo da Vinci (dominio público).
 
 ---
 

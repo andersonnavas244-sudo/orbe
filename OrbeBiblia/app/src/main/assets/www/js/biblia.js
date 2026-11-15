@@ -71,13 +71,17 @@
     const maxH = innerHeight - 66 - top - 12;
     let w, h, g;
     const pic = $('#cuadro');
+    let heroTop = top;
     if (cuadro.img) {
-      // que las manos (abajo del cuadro) queden por encima de la barra de pestañas
-      w = Math.min(innerWidth, 620); h = w * cuadro.ratio;
-      if (h > maxH) { h = maxH; w = h / cuadro.ratio; }
+      // la imagen cubre toda la pantalla (detrás de la cabecera), sin dejar bordes
+      const vh = innerHeight - 66;
+      w = innerWidth; h = w * cuadro.ratio;
+      if (h < vh) { h = vh; w = h / cuadro.ratio; }
+      heroTop = 0;
       g = cuadro.globo;
       if (pic.getAttribute('src') !== cuadro.img) pic.src = cuadro.img;
       pic.hidden = false;
+      pic.classList.toggle('full', w >= innerWidth - 1);
     } else {
       w = innerWidth; h = Math.min(maxH, innerWidth * 1.25);
       g = { x: 0.5, y: 0.47, r: Math.min(0.36, (h * 0.34) / w) };
@@ -85,16 +89,19 @@
     }
     const x = (innerWidth - w) / 2;
     const hero = $('#hero');
-    Object.assign(hero.style, { left: x + 'px', top: top + 'px', width: w + 'px', height: h + 'px' });
+    Object.assign(hero.style, { left: x + 'px', top: heroTop + 'px', width: w + 'px', height: h + 'px' });
     const r = g.r * w, S = Math.round(r * 2.7);
     const cx = g.x * w, cy = g.y * h;
     Object.assign($('#globe').style, { left: (cx - S / 2) + 'px', top: (cy - S / 2) + 'px', width: S + 'px', height: S + 'px' });
     Object.assign($('#sheen').style, { left: (cx - r) + 'px', top: (cy - r) + 'px', width: 2 * r + 'px', height: 2 * r + 'px' });
     const hr = r * 3.2;
     Object.assign($('#halo').style, { left: (cx - hr) + 'px', top: (cy - hr) + 'px', width: 2 * hr + 'px', height: 2 * hr + 'px' });
-    heroBox = { x, top, w, h, r, S, g };
+    heroBox = { x, top: heroTop, w, h, r, S, g };
     document.body.classList.toggle('con-cuadro', !!cuadro.img);
-    document.documentElement.style.setProperty('--hero-pad', Math.max(200, top + h - 74 - 10) + 'px');
+    $('#hero-title').textContent = cuadro.img ? 'Jesús, la luz del mundo' : 'La luz del mundo';
+    // el versículo empieza justo debajo de las manos (o del planeta)
+    const below = cuadro.img ? heroTop + (g.y * h + g.r * w) + w * 0.12 : top + h;
+    document.documentElement.style.setProperty('--hero-pad', Math.max(200, Math.min(innerHeight - 66 - 64, below) - 74) + 'px');
     if (globe) {
       globe.width(S).height(S);
       // altura de cámara para que el radio del planeta en pantalla sea r
@@ -129,6 +136,15 @@
     globe.pointOfView({ lat: 12, lng: ((sunLng + 20 + 540) % 360) - 180, altitude: 2 });
     layoutHero();
     addEventListener('resize', layoutHero);
+    const sunFollow = () => {
+      if (window.TierraHD && TierraHD.mats && TierraHD.mats.length && !document.hidden) {
+        const pov = globe.pointOfView();
+        const sun = [((pov.lng - 28 + 540) % 360) - 180, Math.max(-60, Math.min(60, pov.lat + 18))];
+        for (const m of TierraHD.mats) if (m.uniforms && m.uniforms.sunPosition) m.uniforms.sunPosition.value = sun;
+      }
+      requestAnimationFrame(sunFollow);
+    };
+    requestAnimationFrame(sunFollow);
     // el cuadro sube un poco más lento que el texto (efecto de profundidad)
     $('#v-hoy').addEventListener('scroll', e => {
       const st = e.target.scrollTop;
@@ -357,11 +373,13 @@
     const ctx = cv.getContext('2d');
     ctx.fillStyle = '#05060d'; ctx.fillRect(0, 0, W, H);
     // Jesús sosteniendo el planeta (el cuadro arriba y el globo tal como se ve ahora en su mano)
-    const ph = 1220, pw = cuadro.img ? ph / cuadro.ratio : W, px = (W - pw) / 2;
+    const full = !!cuadro.img;
+    const shift = full ? 120 : 0;                     // con imagen: se sube un poco para dejar sitio al texto
+    const ph = full ? Math.round(W * cuadro.ratio) : 1220, pw = W, px = 0;
     try {
       const gc = globe && globe.renderer().domElement;
       if (cuadro.img) {
-        ctx.drawImage(await loadImg(cuadro.img), px, 0, pw, ph);
+        ctx.drawImage(await loadImg(cuadro.img), 0, -shift, pw, ph);
       } else {
         // luz dorada del amanecer detrás del planeta
         const lg = ctx.createRadialGradient(W / 2, 560, 40, W / 2, 560, 760);
@@ -370,31 +388,30 @@
       }
       if (gc && gc.width && heroBox) {
         const g = heroBox.g, size = heroBox.S * pw / heroBox.w;
-        const gy = cuadro.img ? g.y * ph : 560;
+        const gy = cuadro.img ? g.y * ph - shift : 560;
         ctx.drawImage(gc, px + g.x * pw - size / 2, gy - size / 2, size, size);
       }
-      const side = ctx.createLinearGradient(0, 0, W, 0);
-      side.addColorStop(0, 'rgba(5,6,13,1)'); side.addColorStop(px / W + 0.06, 'rgba(5,6,13,0)');
-      side.addColorStop(1 - px / W - 0.06, 'rgba(5,6,13,0)'); side.addColorStop(1, 'rgba(5,6,13,1)');
-      ctx.fillStyle = side; ctx.fillRect(0, 0, W, ph);
     } catch (e) { /* sin cuadro */ }
-    let g = ctx.createLinearGradient(0, ph - 420, 0, ph + 40);
-    g.addColorStop(0, 'rgba(5,6,13,0)'); g.addColorStop(1, 'rgba(5,6,13,1)');
-    ctx.fillStyle = g; ctx.fillRect(0, ph - 420, W, 460);
+    const fadeTop = full ? 1250 : ph - 420;
+    let g = ctx.createLinearGradient(0, fadeTop, 0, fadeTop + 300);
+    g.addColorStop(0, 'rgba(5,6,13,0)'); g.addColorStop(1, 'rgba(5,6,13,.93)');
+    ctx.fillStyle = g; ctx.fillRect(0, fadeTop, W, 300);
+    ctx.fillStyle = 'rgba(5,6,13,.93)'; ctx.fillRect(0, fadeTop + 299, W, H - fadeTop);
     g = ctx.createRadialGradient(W / 2, 1450, 10, W / 2, 1450, 700);
     g.addColorStop(0, 'rgba(255,200,110,.16)'); g.addColorStop(1, 'rgba(255,200,110,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 900, W, 1020);
     // texto del versículo (debajo del cuadro)
     let size = 64, lines;
-    do { ctx.font = `italic ${size}px 'Noto Serif', Georgia, serif`; lines = wrapLines(ctx, `“${text}”`, W - 150); size -= 3; } while (lines.length * size * 1.42 > 470 && size > 30);
+    const boxTop = full ? 1350 : 1180, boxH = full ? 290 : 470;
+    do { ctx.font = `italic ${size}px 'Noto Serif', Georgia, serif`; lines = wrapLines(ctx, `“${text}”`, W - 150); size -= 3; } while (lines.length * size * 1.42 > boxH && size > 28);
     size += 3;
-    const lh = size * 1.42, top = 1180 + Math.max(0, (470 - lines.length * lh) / 2) + size;
+    const lh = size * 1.42, top = boxTop + Math.max(0, (boxH - lines.length * lh) / 2) + size * 0.8;
     ctx.textAlign = 'center'; ctx.fillStyle = '#fff8ea'; ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 22;
     lines.forEach((l, i) => ctx.fillText(l, W / 2, top + i * lh));
     ctx.shadowBlur = 0;
     ctx.font = `600 46px 'Space Grotesk', sans-serif`;
     const gr = ctx.createLinearGradient(W / 2 - 250, 0, W / 2 + 250, 0); gr.addColorStop(0, '#ffe4a3'); gr.addColorStop(1, '#ff9f43');
-    ctx.fillStyle = gr; ctx.fillText(ref, W / 2, top + (lines.length - 1) * lh + 80);
+    ctx.fillStyle = gr; ctx.fillText(ref, W / 2, top + (lines.length - 1) * lh + 68);
     // marca
     try { ctx.drawImage(await loadImg('img/icono.png'), W / 2 - 215, H - 175, 70, 70); } catch (e) { /* sin icono */ }
     ctx.textAlign = 'left'; ctx.font = `700 40px 'Space Grotesk', sans-serif`; ctx.fillStyle = '#ffffff';
@@ -489,7 +506,7 @@
       ${NATIVE ? `<div class="premium">${state.premium ? '<h4>✨ Premium activo</h4><p>Gracias por apoyar Orbe Biblia: no verás anuncios.</p><button class="btn block" data-act="premium-manage">Administrar suscripción</button>'
         : '<h4>✨ Orbe Biblia Premium</h4><p>Lee y medita sin anuncios.</p><button class="btn gold block" data-act="premium">Quitar anuncios</button>'}</div>` : ''}
       <button class="btn block" data-act="share-app" style="margin-top:12px">📲 Compartir Orbe Biblia</button>
-      <p class="about">Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público), con la ortografía original. Imágenes del planeta: NASA. Orbe Biblia funciona sin internet; los anuncios necesitan conexión.</p>`;
+      <p class="about">Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público), con las tildes actualizadas. Imagen de Jesús creada con IA. Texturas del planeta: NASA. Música original de la app. Orbe Biblia funciona sin internet; los anuncios necesitan conexión.</p>`;
   }
 
   // =====================================================================

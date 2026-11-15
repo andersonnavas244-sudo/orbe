@@ -27,6 +27,7 @@ i[data-ico] svg { width: 100%; height: 100%; }
 
 /* Jesús sosteniendo el planeta (el cuadro de fondo y el globo 3D en su mano) */
 #hero { position: fixed; z-index: 0; left: 0; top: 0; width: 100vw; height: 100vh; transform-origin: 50% 0; will-change: transform; transition: opacity .5s; }
+#cuadro.full { -webkit-mask-image: none !important; mask-image: none !important; }
 #cuadro { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none;
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
 #globe { position: absolute; }
@@ -39,7 +40,7 @@ i[data-ico] svg { width: 100%; height: 100%; }
 #hero-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 5%; background: linear-gradient(180deg, transparent, var(--bg)); pointer-events: none; }
 #dust { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 body.reading #hero, body.reading #dust { opacity: 0; }
-.hero-cap { display: flex; flex-direction: column; align-items: flex-start; text-align: left; max-width: 56%; margin: -70px 0 22px 4px; text-shadow: 0 2px 12px rgba(0, 0, 0, .9); }
+.hero-cap { display: flex; flex-direction: column; align-items: center; text-align: center; margin: -58px 0 18px; text-shadow: 0 2px 12px rgba(0, 0, 0, .95), 0 0 30px rgba(0, 0, 0, .8); }
 .hero-cap b { font: 600 15px var(--display); letter-spacing: 1px; color: var(--gold2); }
 .hero-cap small { color: #d9dfef; font-size: 12.5px; animation: bob 2.2s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(4px); opacity: .7; } }
@@ -236,3 +237,9 @@ body.reading #hero, body.reading #dust { opacity: 0; }
 /* Sin cuadro: el planeta grande al amanecer, centrado */
 body:not(.con-cuadro) .hero-cap { align-items: center; text-align: center; max-width: none; margin: -60px 0 20px; }
 body:not(.con-cuadro) #halo { background: radial-gradient(circle, rgba(255, 214, 140, .6) 0, rgba(255, 180, 90, .24) 36%, transparent 68%); }
+
+/* Con la imagen de Jesús: brillo más suave (la imagen ya tiene luz) y la cabecera más transparente */
+body.con-cuadro #halo { opacity: .55; }
+body.con-cuadro .brand, body.con-cuadro .top .icon-btn { background: rgba(9, 13, 28, .5); }
+body.con-cuadro #hero-fade { height: 18%; }
+body.con-cuadro .hero-cap { display: none; }

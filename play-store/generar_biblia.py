@@ -46,17 +46,17 @@ def backdrop(W, H, cx, cy, R, lat0=12, lon0=-70, scale=1.0):
     return canvas, xx
 
 
-def jesus_canvas(W, H, ph, px, py, seed=51):
-    """Espacio + el Salvator Mundi (Leonardo, dominio público) con la Tierra en su mano. Devuelve (canvas, xx)."""
+def jesus_canvas(W, H, ph, px, py, seed=51, fade=True):
+    """Espacio + la imagen de Jesús (hecha con IA) con nuestra Tierra entre sus manos. Devuelve (canvas, xx)."""
     import json
     meta = json.load(open(os.path.join(APP['www'], 'data', 'cuadro.json'), encoding='utf-8'))
     canvas, xx, yy = gg.space(W, H, W // 2, H // 2, seed=seed, stars=500)
-    pic = Image.open(os.path.join(APP['www'], 'img', 'salvator.jpg')).convert('RGB')
+    pic = Image.open(os.path.join(APP['www'], meta['img'])).convert('RGB')
     pw = round(ph / meta['ratio'])
     pic = np.asarray(pic.resize((pw, ph), Image.LANCZOS), np.float32)
     # bordes del cuadro fundidos con el espacio
-    fx = np.minimum(1, np.minimum(np.arange(pw), pw - 1 - np.arange(pw)) / (pw * 0.08))
-    fy = np.minimum(1, (ph - 1 - np.arange(ph)) / (ph * 0.06))
+    fx = np.minimum(1, np.minimum(np.arange(pw), pw - 1 - np.arange(pw)) / (pw * 0.08)) if fade else np.ones(pw)
+    fy = np.minimum(1, (ph - 1 - np.arange(ph)) / (ph * 0.06)) if fade else np.ones(ph)
     a = (fy[:, None] * fx[None, :])[..., None]
     y0, y1, x0, x1 = max(0, py), min(H, py + ph), max(0, px), min(W, px + pw)
     sub = pic[y0 - py:y1 - py, x0 - px:x1 - px]
@@ -68,7 +68,7 @@ def jesus_canvas(W, H, ph, px, py, seed=51):
                          halo_k=9, spec=0.3, spec_pow=140, rim_k=0.8, halo_a=0.7, cloud_a=0.55, night_a=1.3)
     r = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
     glow = np.clip(1 - r / (R * 3.2), 0, 1) ** 2.4
-    canvas = np.clip(canvas + glow[..., None] * np.array([255, 205, 130.]) * 0.35, 0, 255)
+    canvas = np.clip(canvas + glow[..., None] * np.array([255, 205, 130.]) * 0.18, 0, 255)
     return canvas, xx
 
 
@@ -127,21 +127,30 @@ def store():
 def social():
     out_dir = os.path.join(OUT, 'publicidad')
     os.makedirs(out_dir, exist_ok=True)
-    for name, (W, H), ph, ty in [('redes-cuadrada.png', (1080, 1080), 700, 700), ('redes-historia.png', (1080, 1920), 1240, 1250)]:
+    import json
+    ratio = json.load(open(os.path.join(APP['www'], 'data', 'cuadro.json'), encoding='utf-8'))['ratio']
+    for name, (W, H) in [('redes-cuadrada.png', (1080, 1080)), ('redes-historia.png', (1080, 1920))]:
         big = H > W
-        pw = ph / 1.4713
-        canvas, xx = jesus_canvas(W, H, ph, int((W - pw) / 2), 0)
+        if big:   # la imagen ocupa toda la historia; el texto va abajo sobre una sombra
+            canvas, xx = jesus_canvas(W, H, round(W * ratio), 0, -110, fade=False)
+            ty = 1430
+        else:     # cuadrada: la imagen arriba y el texto debajo
+            ph = 700
+            canvas, xx = jesus_canvas(W, H, ph, int((W - ph / ratio) / 2), 0)
+            ty = 712
+        yy = np.arange(H)[:, None, None]
+        shade = np.clip((yy - (ty - 200)) / 260, 0, 1) * 0.9
+        canvas = canvas * (1 - shade) + np.array([5, 6, 13.]) * shade
         img = Image.fromarray(canvas.astype(np.uint8))
-        y = ty
-        img, bb = gp.text_center(img, xx, 'Orbe Biblia', gg.font(gp.FONT_B, 120 if big else 92), y)
-        sf = gg.font(gp.FONT_S, 54 if big else 40)
-        img, bb = gp.text_center(img, xx, 'La Biblia completa y un versículo cada día', sf, bb[3] + 24, gradient=False)
+        img, bb = gp.text_center(img, xx, 'Orbe Biblia', gg.font(gp.FONT_B, 120 if big else 92), ty)
+        sf = gg.font(gp.FONT_S, 50 if big else 40)
+        img, bb = gp.text_center(img, xx, 'La Biblia completa y un versículo cada día', sf, bb[3] + 22, gradient=False)
         d = ImageDraw.Draw(img)
-        nf = gg.font(gp.FONT_B, 50 if big else 38)
+        nf = gg.font(gp.FONT_B, 48 if big else 38)
         txt = 'Sin internet  ·  Gratis'
         w = d.textlength(txt, font=nf)
-        d.text(((W - w) / 2, bb[3] + 30), txt, font=nf, fill=(255, 222, 160))
-        gp.cta(img, 'Gratis en Google Play', bb[3] + 30 + (80 if big else 62))
+        d.text(((W - w) / 2, bb[3] + 26), txt, font=nf, fill=(255, 222, 160))
+        gp.cta(img, 'Gratis en Google Play', bb[3] + 26 + (76 if big else 60))
         img.save(os.path.join(out_dir, name), optimize=True)
         print(f'  -> biblia/publicidad/{name}')
 

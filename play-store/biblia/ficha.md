@@ -14,7 +14,7 @@ La Biblia completa sin internet, con un versículo para cada día y oraciones.
 
 ✨ VERSÍCULO DEL DÍA
 • Cada día un versículo nuevo para empezar con fe: ánimo, paz, amor, familia, esperanza.
-• Jesús, Salvador del mundo, sosteniendo la Tierra que gira en 3D en su mano.
+• Jesús, la luz del mundo, sosteniendo entre sus manos la Tierra que gira en 3D.
 • Compártelo como una imagen hermosa en tus estados de WhatsApp, Instagram y Facebook.
 • Notificación diaria a la hora que tú elijas.
 
@@ -43,7 +43,7 @@ La Biblia completa sin internet, con un versículo para cada día y oraciones.
 🎵 MÚSICA PARA ORAR
 • Música suave de fondo para leer y orar con calma.
 
-Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público). Imagen: «Salvator Mundi», atribuido a Leonardo da Vinci (c. 1500, dominio público).
+Texto bíblico: Santa Biblia Reina-Valera 1909 (dominio público).
 
 ## Categoría y etiquetas
 

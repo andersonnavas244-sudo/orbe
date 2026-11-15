@@ -55,7 +55,7 @@ La app no está dirigida a menores de 13 años y no recoge a sabiendas datos de 
 ## 10. Créditos
 
 Texto bíblico: Santa Biblia Reina-Valera 1909, dominio público (eBible.org), con las tildes actualizadas.
-Imagen: «Salvator Mundi», atribuido a Leonardo da Vinci (c. 1500), dominio público. Texturas de la Tierra: NASA.
+Imagen de Jesús: creada para Orbe Biblia con inteligencia artificial. Texturas de la Tierra: NASA.
 
 ## 11. Contacto
 

@@ -8,7 +8,7 @@ oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
 
 ## Funciones
 
-- **Hoy:** el «Salvator Mundi» de Leonardo da Vinci con la Tierra 3D girando en la mano de Jesús, el versículo
+- **Hoy:** Jesús (imagen creada con IA, `arte/`) con la Tierra 3D girando entre sus manos, el versículo
   del día (366 escogidos por tema), palabras para cada momento (8 temas, 206 versículos), oraciones de la Biblia
   (Padre Nuestro, Salmos 23, 91, 121 y 51, Bienaventuranzas, 1 Corintios 13, bendición de Números 6) y tu plan.
 - **Biblia:** 66 libros, letra capital dorada, resaltados de 4 colores, favoritos, copiar, compartir como imagen,
@@ -25,7 +25,7 @@ oraciones, planes de lectura y Jesús sosteniendo el mundo en 3D.
 |---|---|
 | Interfaz | `app/src/main/assets/www/js/biblia.js`, `css/biblia.css` |
 | Texto bíblico (por libro), versículos del día y temas | `www/data/biblia/*.json`, `diario.json`, `temas.json` (`tools/build_biblia.py`) |
-| Cuadro y posición del planeta | `www/img/salvator.jpg`, `www/data/cuadro.json` (`tools/hacer_cuadro.py`) |
+| Imagen de Jesús y posición del planeta | `www/img/jesus.jpg`, `www/data/cuadro.json` (`tools/hacer_cuadro.py`) |
 | Versículo del día (notificación) | `DailyVerse.java` |
 | Lectura en voz alta | `Speech.java` |
 | Anuncios y Premium | `AdsManager.java`, `AdsConfig.java`, `BillingManager.java` |
@@ -39,10 +39,10 @@ python OrbeBiblia/tools/build_biblia.py spaRV1909_vpl.txt
 (descarga: <https://eBible.org/Scriptures/spaRV1909_vpl.zip>)
 
 ```bash
-python OrbeBiblia/tools/hacer_cuadro.py salvator.jpg
+python OrbeBiblia/tools/hacer_cuadro.py "OrbeBiblia/arte/Jesús Sosteniendo la Tierra Luminosa.png"
 ```
 
-(Wikimedia Commons, «Leonardo da Vinci, Salvator Mundi, c.1500, oil on walnut, 45.4 × 65.6 cm.jpg»)
+(si cambias la imagen, ajusta en `GLOBO` el centro y el radio del globo que aparece en ella)
 
 ## Antes de publicar
 
@@ -52,6 +52,6 @@ python OrbeBiblia/tools/hacer_cuadro.py salvator.jpg
 
 ## Créditos
 
-Texto: Santa Biblia Reina-Valera 1909 (dominio público, eBible.org), con las tildes actualizadas · Imagen:
-«Salvator Mundi», atribuido a Leonardo da Vinci (c. 1500, dominio público) · Texturas de la Tierra: NASA ·
+Texto: Santa Biblia Reina-Valera 1909 (dominio público, eBible.org), con las tildes actualizadas · Imagen de
+Jesús: creada con IA para Orbe Biblia · Texturas de la Tierra: NASA ·
 Música: original de la app.
