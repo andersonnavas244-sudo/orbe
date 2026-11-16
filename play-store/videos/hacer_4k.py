@@ -17,16 +17,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PS = os.path.dirname(HERE)
 LISTOS = os.path.join(HERE, 'listos')
 FF = imageio_ffmpeg.get_ffmpeg_exe()
-APPS = ['sismos', 'radio', 'tv', 'espacio', 'clima', 'podcasts', 'biblia', 'juegos']
+APPS = ['sismos', 'radio', 'tv', 'espacio', 'clima', 'podcasts', 'biblia', 'juegos', 'juegos2m']
+# videos que no siguen el nombre orbe-<app>-90s.mp4: carpeta de la app y nombre base
+ESPECIALES = {'juegos2m': ('juegos', 'orbe-juegos-2m')}
 
 os.makedirs(os.path.join(LISTOS, '4k'), exist_ok=True)
 for key in sys.argv[1:] or APPS:
-    src = os.path.join(PS, key, 'video', f'orbe-{key}-90s.mp4')
+    carpeta, base = ESPECIALES.get(key, (key, f'orbe-{key}-90s'))
+    src = os.path.join(PS, carpeta, 'video', base + '.mp4')
     if not os.path.exists(src):
         print('  falta', src)
         continue
-    shutil.copy2(src, os.path.join(LISTOS, f'orbe-{key}-90s.mp4'))
-    out = os.path.join(LISTOS, '4k', f'orbe-{key}-90s-4k.mp4')
+    shutil.copy2(src, os.path.join(LISTOS, base + '.mp4'))
+    out = os.path.join(LISTOS, '4k', base + '-4k.mp4')
     subprocess.run([FF, '-y', '-loglevel', 'error', '-i', src, '-vf', 'scale=2160:3840:flags=lanczos,unsharp=5:5:0.5:5:5:0.0',
                     '-c:v', 'libx264', '-crf', '19', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', out], check=True)
     print(f'  -> {key}: Full HD {os.path.getsize(src) / 1e6:.0f} MB · 4K {os.path.getsize(out) / 1e6:.0f} MB')

@@ -456,6 +456,14 @@ class Clip:
     def frame(self, u, size, loop=False):
         x = u * self.fps
         n = len(self.files) - 1
+        if loop == 'bucle' and n > 0:             # se repite hacia adelante, con un fundido corto en la unión
+            fade = min(12, n // 4)
+            per = n + 1 - fade
+            x = x % per
+            if x < fade and u * self.fps >= per:
+                a = x / fade
+                return Image.blend(self.get(int(per + x)), self.get(int(x)), a).resize(size, Image.BILINEAR)
+            return self.get(int(x)).resize(size, Image.BILINEAR)
         if loop and n > 0:                        # ida y vuelta, sin saltos
             x = x % (2 * n)
             x = 2 * n - x if x > n else x
@@ -517,6 +525,14 @@ class Video:
         self.white = Image.new('RGBA', (W, H), (255, 245, 235, 255))
         self.black = Image.new('RGBA', (W, H), (0, 0, 0, 255))
         self.black = Image.new('RGBA', (W, H), (0, 0, 0, 255))
+        if cfg.get('clips_dir'):                    # clips del juego real grabados a 30 fps (grabar_juegos.js)
+            folder = os.path.join(CACHE, cfg['clips_dir'])
+            for name in os.listdir(folder):
+                if os.path.isdir(os.path.join(folder, name)):
+                    self.clips[name] = Clip(os.path.join(folder, name), fps=30)
+            self.shade_soft = vertical_shade(150, 30, 120)
+            self.shade_bottom = vertical_shade(0, 0, 235)
+            self.blur_shade = vertical_shade(150, 95, 175)
         if self.epic:
             folder = os.path.join(CACHE, key, 'clips')
             for name in os.listdir(folder):
@@ -580,7 +596,7 @@ class Video:
         s, pad2 = plain_text(e['s'], gg.font(FS, 44))
         L['sub'] = (s, ((W - s.size[0]) // 2, ty + 22 - pad2))
         top = ty + 22 + s.size[1] - 2 * pad2 + 46
-        shot = Image.open(os.path.join(PS, self.key, e['img'])).convert('RGB')
+        shot = Image.open(os.path.join(PS, self.cfg.get('dir', self.key), e['img'])).convert('RGB')
         width = 590
         ph = gp.phone(shot, width).convert('RGBA')
         maxh = 1600 - top
@@ -687,7 +703,7 @@ class Video:
                 t0 += w
             cs[-1] = (cs[-1][0], max(cs[-1][1], s + d - 0.35), cs[-1][2])
             scenes.append(dict(e=e, s=s, d=d, L=layers, caps=cs))
-        out_dir = os.path.join(PS, self.key, 'video')
+        out_dir = os.path.join(PS, cfg.get('dir', self.key), 'video')
         os.makedirs(out_dir, exist_ok=True)
         silent = os.path.join(CACHE, self.key, 'video-sin-audio.mp4')
         wr = imageio_ffmpeg.write_frames(silent, (W, H), fps=FPS, codec='libx264', pix_fmt_in='rgb24', macro_block_size=8,
@@ -698,12 +714,12 @@ class Video:
             t = i / FPS
             fr = self.frame(t, scenes)
             if i == int(2.6 * FPS):
-                fr.convert('RGB').save(os.path.join(out_dir, 'portada.png'))
+                fr.convert('RGB').save(os.path.join(out_dir, cfg.get('portada', 'portada.png')))
             wr.send(np.asarray(fr.convert('RGB')))
             if i % 450 == 0:
                 print(f'  {self.key}: {i * 100 // nfr}%', flush=True)
         wr.close()
-        out = os.path.join(out_dir, f'orbe-{self.key}-90s.mp4')
+        out = os.path.join(out_dir, cfg.get('salida', f'orbe-{self.key}-90s.mp4'))
         subprocess.run([FFMPEG, '-y', '-loglevel', 'error', '-i', silent, '-i', audio, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
                         '-shortest', '-movflags', '+faststart', out], check=True)
         print(f'  -> {os.path.relpath(out, gg.ROOT)} ({os.path.getsize(out) / 1e6:.1f} MB)')
@@ -725,12 +741,19 @@ class Video:
         bgc = e.get('bgclip') or (self.cfg.get('fondo_clip') if self.epic else None)
         if bgc:
             own = bool(e.get('bgclip'))
-            img = self.clips[bgc].frame(u if own else t * 0.5, (W, H), loop=not own).convert('RGBA')
+            lp = 'bucle' if self.cfg.get('clips_dir') else not own
+            img = self.clips[bgc].frame(u if own else t * 0.5, (W, H), loop=lp).convert('RGBA')
             img.alpha_composite(self.shade_soft if own else self.shade)
             if own and self.cfg.get('portada_abajo'):
                 img.alpha_composite(self.shade_bottom)
             if e.get('cta'):
                 img = Image.blend(img, self.black, 0.38)
+        elif self.cfg.get('fondo_blur') and e.get('phoneclip'):
+            # fondo: la misma jugada, desenfocada y oscurecida, mezclada con el fondo de fiesta
+            small = self.clips[e['phoneclip']].frame(u + e.get('clipoff', 0), (216, 384), loop='bucle')
+            small = small.filter(ImageFilter.GaussianBlur(7)).resize((W, H), Image.BILINEAR).convert('RGBA')
+            img = Image.blend(self.bg.crop((ox, oy, ox + W, oy + H)), small, 0.62)
+            img.alpha_composite(self.blur_shade)
         else:
             img = self.bg.crop((ox, oy, ox + W, oy + H))
         # ondas sísmicas que salen del icono en la portada y el cierre de Orbe Sismos
@@ -757,7 +780,8 @@ class Video:
                 dy += int(6 * math.sin(u * 1.6))       # flota suavemente
                 if e.get('phoneclip') and id(e) in self.phone_geo:
                     width, glow, gpad = self.phone_geo[id(e)]
-                    ph = gp.phone(self.clips[e['phoneclip']].frame(u, (720, 1280)), width).convert('RGBA')
+                    lp = 'bucle' if self.cfg.get('clips_dir') else False
+                    ph = gp.phone(self.clips[e['phoneclip']].frame(u + e.get('clipoff', 0), (720, 1280), loop=lp), width).convert('RGBA')
                     lay = Image.new('RGBA', glow.size)
                     lay.alpha_composite(glow)
                     lay.alpha_composite(ph, (gpad, gpad))
@@ -804,7 +828,8 @@ class Video:
 
 
 if __name__ == '__main__':
-    keys = sys.argv[1:] or list(APPS)
+    keys = sys.argv[1:] or [k for k in APPS if k != 'juegos2m']
     for key in keys:
+        TOTAL = float(APPS[key].get('total', 90.0))     # duración del video (por defecto 1 min 30 s)
         gg._tex_cache.clear()
         Video(key, APPS[key]).build()
