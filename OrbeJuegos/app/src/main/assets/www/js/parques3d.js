@@ -169,7 +169,7 @@
       { p: [8, 11, 32], w: 22, h: 12, c: 0xffe6c8, f: 1.8 },
       { p: [-10, 12, -32], w: 24, h: 10, c: 0xffffff, f: 2.2 }
     ]);
-    const mesaT = tex(1024, 1024, (g, w, h) => {
+    const mesaT = tex(2048, 2048, (g, w, h) => {
       const n = 6, ph = h / n, tonos = ['#3b2215', '#452819', '#352011', '#402517', '#4a2b1b', '#341d11'];
       for (let i = 0; i < n; i++) {
         g.fillStyle = tonos[i]; g.fillRect(0, i * ph, w, ph);
@@ -188,7 +188,9 @@
     scene.add(lamp); scene.add(lamp.target);
 
     /* ---------------- tablero ---------------- */
-    const tabM = std({ map: tex(2048, 2048, pintarTablero), roughness: .5, metalness: 0, envMapIntensity: .3, toneMapped: false });
+    /* Tablero en 4K (4096 px) si el celular lo aguanta; si no, 2K. Acabado laqueado con un leve reflejo */
+    const T4 = OJ.R.capabilities.maxTextureSize >= 8192 ? 4096 : 2048;
+    const tabM = std({ map: tex(T4, T4, pintarTablero), roughness: .36, metalness: 0, envMapIntensity: .5, toneMapped: false });
     mesh(scene, plano(19, 19), tabM, V(0, 0, 0), false).receiveShadow = true;
     /* marco de madera barnizada: cuatro listones a inglete con el canto biselado */
     const maderaT = tex(1024, 256, (g, w, h) => {
@@ -200,7 +202,7 @@
     const listonG = new THREE.ExtrudeGeometry(liston, { depth: 0.61, bevelEnabled: true, bevelThickness: 0.12, bevelSize: 0.12, bevelOffset: -0.12, bevelSegments: 3 }).rotateX(-Math.PI / 2);
     for (let k = 0; k < 4; k++) mesh(scene, listonG, maderaM, V(0, Y0 + 0.12, 0)).rotation.y = k * Math.PI / 2;
     /* números de las casillas: calcomanías que giran con la cámara para leerse siempre derechas */
-    const numT = tex(1024, 1024, (g, w) => {
+    const numT = tex(T4 / 2, T4 / 2, (g, w) => {
       const s = w / 9; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 ' + Math.round(s * .6) + 'px ' + FUENTE; g.lineJoin = 'round';
       for (let i = 0; i < 68; i++) {
         const x = (i % 9 + .5) * s, y = (Math.floor(i / 9) + .5) * s + s * .05, blanca = SALIDA.indexOf(i) >= 0;
@@ -230,8 +232,10 @@
     const meta = mesh(scene, new THREE.ExtrudeGeometry(estS, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelOffset: -0.07, bevelSegments: 2 }).rotateX(-Math.PI / 2), oroM, V(0, 0.07, 0));
     const metaLuz = mesh(scene, plano(4.4, 4.4), new THREE.MeshBasicMaterial({ map: OJ.dotTex, color: lin(0xffe28a), transparent: true, opacity: 0, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending }), V(0, 0.3, 0), false);
     /* aro en relieve de cada casa (plástico del color) */
-    const fichaM = LIN.map(c => std({ color: c, roughness: .2, metalness: 0, envMapIntensity: 1 }));
-    const fichaHL = LIN.map(c => std({ color: c, emissive: c, emissiveIntensity: .2, roughness: .2, metalness: 0, envMapIntensity: 1 }));
+    /* Fichas de plástico laqueado: capa transparente brillante encima del color (como fichas nuevas) */
+    const laca = (c, hl) => new THREE.MeshPhysicalMaterial({ color: c, emissive: hl ? c : 0x000000, emissiveIntensity: hl ? .2 : 0, roughness: .28, metalness: 0, clearcoat: 1, clearcoatRoughness: .08, envMapIntensity: 1.1 });
+    const fichaM = LIN.map(c => laca(c, false));
+    const fichaHL = LIN.map(c => laca(c, true));
     const aroCasaG = new THREE.TorusGeometry(3.36, 0.075, 8, 72).rotateX(Math.PI / 2);
     CARCEL.forEach((c, j) => { const m = mesh(scene, aroCasaG, fichaM[j], V(wx(c[0]), 0.02, wz(c[1]))); m.scale.y = 0.7; });
     /* anillo de turno: rayitas blancas que giran alrededor de la casa */
@@ -248,7 +252,7 @@
     const perfil = [[0, 0], [.40, 0], [.435, .02], [.445, .06], [.435, .11], [.40, .14], [.355, .155], [.33, .19], [.305, .25], [.265, .40], [.215, .58], [.18, .74], [.17, .82], [.185, .86], [.24, .885], [.262, .915], [.24, .945], [.185, .965], [.16, .985]];
     for (let a = -0.95; a < 1.5; a += 0.27) perfil.push([Math.cos(a) * .3, 1.23 + Math.sin(a) * .3]);
     perfil.push([0, 1.53]);
-    const fichaG = new THREE.LatheGeometry(perfil.map(a => new THREE.Vector2(a[0], a[1])), 28);
+    const fichaG = new THREE.LatheGeometry(perfil.map(a => new THREE.Vector2(a[0], a[1])), 48);
     const somT = tex(64, 64, (g, w) => { const gr = g.createRadialGradient(w / 2, w / 2, w * .12, w / 2, w / 2, w / 2); gr.addColorStop(0, 'rgba(20,8,0,.5)'); gr.addColorStop(.45, 'rgba(20,8,0,.26)'); gr.addColorStop(.8, 'rgba(20,8,0,.05)'); gr.addColorStop(1, 'rgba(20,8,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, w); });
     const somG = plano(1.36, 1.36), somM = new THREE.MeshBasicMaterial({ map: somT, transparent: true, depthWrite: false });
     const aroT = tex(128, 128, (g, w) => {
@@ -382,7 +386,7 @@
     }, 0.5, 0.5);
     mesh(pivote, new THREE.ShapeGeometry(rr(TW - 2 * RW + 0.1, TD - 2 * RW + 0.1, 0.55), 10).rotateX(-Math.PI / 2), std({ map: fieltroT, roughness: 1, metalness: 0, envMapIntensity: .25 }), V(0, YF, DZ), false).receiveShadow = true;
     const PUNTOS = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.26, .26], [.5, .5], [.74, .74]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]], 6: [[.29, .25], [.71, .25], [.29, .5], [.71, .5], [.29, .75], [.71, .75]] };
-    const caraT = n => tex(256, 256, (g, w) => {
+    const caraT = n => tex(512, 512, (g, w) => {
       const f = g.createRadialGradient(w / 2, w / 2, w * .2, w / 2, w / 2, w * .75); f.addColorStop(0, '#fffaf0'); f.addColorStop(1, '#efe6d2'); g.fillStyle = f; g.fillRect(0, 0, w, w);
       PUNTOS[n].forEach(p => {
         const x = p[0] * w, y = p[1] * w, r = w * (n === 1 ? .15 : .1), gr = g.createRadialGradient(x, y + r * .25, r * .1, x, y, r);
